@@ -11,9 +11,7 @@ import Marcas from './pages/Marcas';
 import Promociones from './pages/Promociones';
 import Nuevos from './pages/Nuevos';
 import ProductoDetalle from './pages/ProductoDetalle';
-
-// ←←← NUEVO IMPORT
-import DirectConnectSp02 from './pages/DirectConnectSp02';
+import SubcategoriaDetalle from './pages/SubcategoriaDetalle';
 
 function App() {
   return (
@@ -29,9 +27,7 @@ function App() {
         <Route path="/promociones" element={<Promociones />} />
         <Route path="/nuevos" element={<Nuevos />} />
         <Route path="/producto/:id" element={<ProductoDetalle />} />
-
-        {/* ←←← NUEVA RUTA AQUÍ */}
-        <Route path="/direct-connect-spo2" element={<DirectConnectSp02 />} />
+        <Route path="/subcategoria/:subId" element={<SubcategoriaDetalle />} />
 
       </Routes>
 
