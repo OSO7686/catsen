@@ -3,9 +3,8 @@ import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useCartStore } from '../store';
 
-// 1. ACTUALIZAMOS LOS NOMBRES DE LAS CATEGORÍAS
+// 1. ACTUALIZAMOS LOS NOMBRES DE LAS CATEGORÍAS (Se eliminó brandsList para mantener limpio)
 const categoriesList = ['SpO2', 'ECG Cables', 'EKG Cables', 'NIBP', 'IBP Cables', 'Temperature', 'Fetal', 'Oxygen Sensors', 'Batteries'];
-const brandsList = ['Philips', 'Mindray', 'GE Medical', 'Nihon Kohden', 'Masimo', 'Nellcor'];
 const otrosList = ['Promociones', 'Nuevos'];
 
 function Header() {
@@ -17,7 +16,7 @@ function Header() {
     <header className="bg-white shadow-sm sticky top-0 z-50">
       <div className="container mx-auto px-4 py-4 flex flex-wrap items-center justify-between">
         <div className="w-full lg:w-auto mb-4 lg:mb-0">
-          <Link to="/" className="h-10 w-48 bg-blue-900 flex iterpmms-center justify-center text-white font-bold text-sm tracking-tighter hover:bg-blue-800 transition-colors">
+          <Link to="/" className="h-10 w-48 bg-blue-900 flex items-center justify-center text-white font-bold text-sm tracking-tighter hover:bg-blue-800 transition-colors">
             MEDSENSORS LOGO
           </Link>
         </div>
@@ -63,7 +62,6 @@ function Header() {
         <div className="container mx-auto px-4 flex justify-center space-x-10 text-xs font-bold uppercase tracking-widest relative">
           
           <Link to="/" className="hover:text-blue-300 transition-colors py-3">Inicio</Link>
-          <Link to="/tienda" className="hover:text-blue-300 transition-colors py-3">Tienda en Línea</Link>
           
           {/* --- MENÚ CATEGORÍAS --- */}
           <div className="relative group cursor-pointer py-3">
@@ -74,24 +72,9 @@ function Header() {
               {categoriesList.map(item => (
                 <Link 
                   key={item} 
-                  // 2. LÓGICA DE RUTAS: Solo "Sensores SpO2" lleva a nuestra página nueva, las demás a un enlace vacío (#)
                   to={`/categorias?tipo=${item}`}
                   className="block px-4 py-2 hover:bg-blue-50 hover:text-blue-600 transition-colors"
                 >
-                  {item}
-                </Link>
-              ))}
-            </div>
-          </div>
-
-          {/* --- MENÚ MARCAS --- */}
-          <div className="relative group cursor-pointer py-3">
-            <span className="hover:text-blue-300 transition-colors flex items-center">
-              Marcas <i className="fas fa-chevron-down ml-1 text-[10px]"></i>
-            </span>
-            <div className="absolute top-full left-0 bg-white shadow-xl py-2 w-48 text-gray-800 border rounded opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 z-50">
-              {brandsList.map(item => (
-                <Link key={item} to="/marcas" className="block px-4 py-2 hover:bg-blue-50 hover:text-blue-600 transition-colors">
                   {item}
                 </Link>
               ))}
@@ -136,7 +119,6 @@ function Header() {
               carrito.map((producto, index) => (
                 <div key={index} className="flex border-b pb-2 items-center relative group">
                   
-                  {/* 3. ACTUALIZACIÓN DE FOTO: Ahora muestra la imagen real del robot */}
                   <img 
                     src={producto.imagen_url || 'https://via.placeholder.com/50'} 
                     alt={producto.nombre}
@@ -144,7 +126,6 @@ function Header() {
                   />
                   
                   <div className="flex-1 pr-6">
-                    {/* Añadimos line-clamp-2 para que los títulos largos no rompan el diseño */}
                     <p className="text-xs font-bold uppercase line-clamp-2">{producto.nombre}</p>
                     <p className="text-blue-600 font-black text-sm mt-1">{producto.precio}</p>
                   </div>
