@@ -4,7 +4,7 @@ import { Link } from 'react-router-dom';
 import { useCartStore } from '../store';
 
 // 1. ACTUALIZAMOS LOS NOMBRES DE LAS CATEGORÍAS
-const categoriesList = ['SpO2', 'ECG Cables', 'EKG Cables', 'NIBP'];
+const categoriesList = ['SpO2', 'ECG Cables', 'EKG Cables', 'NIBP', 'IBP Cables', 'Temperature', 'Fetal', 'Oxygen Sensors', 'Batteries'];
 const brandsList = ['Philips', 'Mindray', 'GE Medical', 'Nihon Kohden', 'Masimo', 'Nellcor'];
 const otrosList = ['Promociones', 'Nuevos'];
 
