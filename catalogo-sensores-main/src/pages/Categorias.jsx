@@ -3,7 +3,6 @@ import { catalogoCompleto } from '../data';
 import { useCartStore } from '../store';
 import { Link, useSearchParams, useNavigate } from 'react-router-dom';
 
-// Lista de todas las categorías principales con sus iconos
 const mainCategories = [
   { nombre: 'SpO2', icon: 'fas fa-fingerprint' },
   { nombre: 'ECG Cables', icon: 'fas fa-wave-square' },
@@ -13,7 +12,6 @@ const mainCategories = [
   { nombre: 'Temperature', icon: 'fas fa-thermometer-half' },
   { nombre: 'Fetal', icon: 'fas fa-baby' },
   { nombre: 'Oxygen Sensors', icon: 'fas fa-lungs' },
-  { nombre: 'Batteries', icon: 'fas fa-battery-full' },
 ];
 
 function Categorias() {
@@ -21,7 +19,6 @@ function Categorias() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   
-  // Categoría desde la URL
   const categoriaPrincipal = searchParams.get('tipo') || 'SpO2';
 
   const [subcatActiva, setSubcatActiva] = useState('Todas');
@@ -29,26 +26,22 @@ function Categorias() {
 
   const ITEMS_POR_PAGINA = 30;
 
-  // 1. RESET cuando cambia la CATEGORÍA PRINCIPAL (desde la URL o el menú superior)
   useEffect(() => {
     setSubcatActiva('Todas');
     setPaginaActual(1);
   }, [categoriaPrincipal]);
 
-  // 2. FUNCIÓN PARA CAMBIAR SUBCATEGORÍA (Resetea la página a 1 para evitar errores)
   const manejarCambioSubcategoria = (nombreSub) => {
     setSubcatActiva(nombreSub);
-    setPaginaActual(1); // Regresamos siempre a la primera página de resultados
+    setPaginaActual(1); 
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  // Lógica de filtrado
   const productosDeLaCategoria = catalogoCompleto.filter(prod => prod.categoria === categoriaPrincipal);
   const productosFiltrados = subcatActiva === 'Todas' 
     ? productosDeLaCategoria 
     : productosDeLaCategoria.filter(prod => prod.subcategoria === subcatActiva);
 
-  // Paginación
   const totalProductos = productosFiltrados.length;
   const totalPaginas = Math.ceil(totalProductos / ITEMS_POR_PAGINA);
   const productosPagina = productosFiltrados.slice((paginaActual - 1) * ITEMS_POR_PAGINA, paginaActual * ITEMS_POR_PAGINA);
@@ -60,7 +53,6 @@ function Categorias() {
     }
   };
 
-  // LOGICA DE PAGINACION COMPACTA (Evita que el diseño se rompa horizontalmente)
   const obtenerPaginas = () => {
     const paginas = [];
     if (totalPaginas <= 5) return Array.from({ length: totalPaginas }, (_, i) => i + 1);
@@ -89,27 +81,29 @@ function Categorias() {
     return paginas;
   };
 
-  // Obtener subcategorías de la categoría actual
   const subcategoriasUnicas = [...new Set(productosDeLaCategoria.map(p => p.subcategoria))].filter(Boolean);
 
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="flex flex-col lg:flex-row gap-8">
         
-        {/* SIDEBAR ÚNICA DINÁMICA TIPO ACORDEÓN */}
+        {/* SIDEBAR ÚNICA DINÁMICA CON SCROLL INTERNO */}
         <aside className="w-full lg:w-1/4 h-fit sticky top-24">
-          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-            <div className="bg-blue-900 p-4">
+          {/* Aquí aplicamos la altura máxima (max-h-[75vh]) y flex-col */}
+          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 flex flex-col max-h-[75vh]">
+            
+            {/* El encabezado se queda fijo (shrink-0) */}
+            <div className="bg-blue-900 p-4 shrink-0 rounded-t-2xl">
               <h3 className="text-white font-black text-xs uppercase tracking-[0.2em]">Navegación de Catálogo</h3>
             </div>
             
-            <nav className="p-2">
+            {/* La lista tiene overflow-y-auto para scrollear si es muy larga */}
+            <nav className="p-2 overflow-y-auto">
               {mainCategories.map((cat) => {
                 const estaActiva = categoriaPrincipal === cat.nombre;
                 
                 return (
                   <div key={cat.nombre} className="mb-1">
-                    {/* Botón de Categoría Principal */}
                     <button
                       onClick={() => navigate(`/categorias?tipo=${cat.nombre}`)}
                       className={`w-full flex items-center justify-between p-3 rounded-xl transition-all group ${
@@ -123,7 +117,6 @@ function Categorias() {
                       <i className={`fas fa-chevron-right text-[10px] transition-transform duration-300 ${estaActiva ? 'rotate-90 text-blue-600' : 'text-gray-300'}`}></i>
                     </button>
 
-                    {/* Subcategorías Desplegables */}
                     {estaActiva && (
                       <ul className="mt-1 ml-9 space-y-1 border-l-2 border-blue-100 pl-2 py-2">
                         <li>
@@ -207,7 +200,7 @@ function Categorias() {
             ))}
           </div>
 
-          {/* PAGINACIÓN COMPACTA ARREGLADA */}
+          {/* PAGINACIÓN COMPACTA */}
           {totalPaginas > 1 && (
             <div className="flex justify-center items-center gap-3 mt-16 bg-white p-4 rounded-2xl shadow-sm border w-fit mx-auto">
               <button 

@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import BotonWhatsapp from './components/BotonWhatsapp';
 import Header from './components/Header';
+import Footer from './components/Footer';
 
 // Importamos todas las páginas
 import Home from './pages/Home';
@@ -30,7 +31,7 @@ function App() {
         <Route path="/subcategoria/:subId" element={<SubcategoriaDetalle />} />
 
       </Routes>
-
+      <Footer /> {/* <-- Colocamos el Footer al final de todas las rutas */}
       <BotonWhatsapp />
     </BrowserRouter>
   );

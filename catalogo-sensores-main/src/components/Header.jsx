@@ -4,7 +4,7 @@ import { Link } from 'react-router-dom';
 import { useCartStore } from '../store';
 
 // 1. ACTUALIZAMOS LOS NOMBRES DE LAS CATEGORÍAS (Se eliminó brandsList para mantener limpio)
-const categoriesList = ['SpO2', 'ECG Cables', 'EKG Cables', 'NIBP', 'IBP Cables', 'Temperature', 'Fetal', 'Oxygen Sensors', 'Batteries'];
+const categoriesList = ['SpO2', 'ECG Cables', 'EKG Cables', 'NIBP', 'IBP Cables', 'Temperature', 'Fetal', 'Oxygen Sensors'];
 const otrosList = ['Promociones', 'Nuevos'];
 
 function Header() {
