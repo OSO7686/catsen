@@ -1,8 +1,3 @@
-// src/pages/Promociones.jsx
-import Header from '../components/Header';
-import Footer from '../components/Footer';
-
-// Una mini base de datos temporal solo para las promociones
 const promosData = [
   { id: 1, nombre: 'Sensor SpO2 Reusable Pediátrico', precioNormal: '$950.00', precioPromo: '$750.00', descuento: '20%' },
   { id: 2, nombre: 'Cable Troncal ECG 5 Puntas', precioNormal: '$1,500.00', precioPromo: '$1,200.00', descuento: '20%' },
@@ -12,7 +7,6 @@ const promosData = [
 function Promociones() {
   return (
     <div className="bg-gray-50 font-sans text-gray-900 min-h-screen flex flex-col">
-      <Header />
 
       {/* Banner de Título */}
       <div className="bg-blue-900 text-white py-12">
@@ -95,8 +89,6 @@ function Promociones() {
         </section>
 
       </main>
-
-      <Footer />
     </div>
   );
 }

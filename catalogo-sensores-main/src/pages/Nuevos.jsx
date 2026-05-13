@@ -1,8 +1,3 @@
-// src/pages/Nuevos.jsx
-import Header from '../components/Header';
-import Footer from '../components/Footer';
-
-// Base de datos de prueba para los productos nuevos
 const nuevosData = [
   { id: 1, nombre: 'Sensor SpO2 Neo/Ped Desechable', precio: '$350.00 MXN', fabricante: 'Compatible Philips' },
   { id: 2, nombre: 'Cable ECG 3 Puntas tipo Clip', precio: '$1,100.00 MXN', fabricante: 'Compatible Mindray' },
@@ -12,7 +7,6 @@ const nuevosData = [
 function Nuevos() {
   return (
     <div className="bg-gray-50 font-sans text-gray-900 min-h-screen flex flex-col">
-      <Header />
 
       {/* Banner de Título (Diseño diferente para Nuevos) */}
       <div className="bg-teal-700 text-white py-12">
@@ -84,8 +78,6 @@ function Nuevos() {
         </section>
 
       </main>
-
-      <Footer />
     </div>
   );
 }

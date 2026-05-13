@@ -1,7 +1,7 @@
 function TopBanner() {
   return (
     <div className="bg-blue-600 text-white text-center py-2 text-xs font-bold uppercase tracking-widest">
-      Los mejores precios del mercado en equipo médico especializado
+      The best prices on the market for specialized medical equipment
     </div>
   );
 }

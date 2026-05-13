@@ -2,8 +2,8 @@ import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import BotonWhatsapp from './components/BotonWhatsapp';
 import Header from './components/Header';
 import Footer from './components/Footer';
+import ScrollToTop from './components/ScrollToTop'; // <-- 1. Importa el componente
 
-// Importamos todas las páginas
 import Home from './pages/Home';
 import Nosotros from './pages/Nosotros';
 import Tienda from './pages/Tienda';
@@ -13,25 +13,31 @@ import Promociones from './pages/Promociones';
 import Nuevos from './pages/Nuevos';
 import ProductoDetalle from './pages/ProductoDetalle';
 import SubcategoriaDetalle from './pages/SubcategoriaDetalle';
+import Busqueda from './pages/Busqueda';
 
 function App() {
   return (
     <BrowserRouter>
+      <ScrollToTop /> {/* <-- 2. Ponlo aquí, arriba de todo */}
+      
       <Header /> 
 
-      <Routes>
-        <Route path="/" element={<Home />} />
-        <Route path="/nosotros" element={<Nosotros />} />
-        <Route path="/tienda" element={<Tienda />} />
-        <Route path="/categorias" element={<Categorias />} />
-        <Route path="/marcas" element={<Marcas />} />
-        <Route path="/promociones" element={<Promociones />} />
-        <Route path="/nuevos" element={<Nuevos />} />
-        <Route path="/producto/:id" element={<ProductoDetalle />} />
-        <Route path="/subcategoria/:subId" element={<SubcategoriaDetalle />} />
+      <main className="min-h-screen">
+        <Routes>
+          <Route path="/" element={<Home />} />
+          <Route path="/nosotros" element={<Nosotros />} />
+          <Route path="/tienda" element={<Tienda />} />
+          <Route path="/categorias" element={<Categorias />} />
+          <Route path="/marcas" element={<Marcas />} />
+          <Route path="/promociones" element={<Promociones />} />
+          <Route path="/nuevos" element={<Nuevos />} />
+          <Route path="/buscar" element={<Busqueda />} />
+          <Route path="/producto/:id" element={<ProductoDetalle />} />
+          <Route path="/subcategoria/:subId" element={<SubcategoriaDetalle />} />
+        </Routes>
+      </main>
 
-      </Routes>
-      <Footer /> {/* <-- Colocamos el Footer al final de todas las rutas */}
+      <Footer />
       <BotonWhatsapp />
     </BrowserRouter>
   );

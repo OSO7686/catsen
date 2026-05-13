@@ -8,7 +8,6 @@ import CarruselMarcas from '../components/CarruselMarcas';
 import CategoriasPrincipales from '../components/CategoriasPrincipales';
 import ProductosDestacados from '../components/ProductosDestacados';
 import SeccionMayoristas from '../components/SeccionMayoristas';
-import Footer from '../components/Footer';
 
 function Home() { // Le cambiamos el nombre de App a Home
   return (
@@ -19,7 +18,6 @@ function Home() { // Le cambiamos el nombre de App a Home
       <CategoriasPrincipales />
       <ProductosDestacados />
       <SeccionMayoristas />
-      <Footer />
     </div>
   );
 }

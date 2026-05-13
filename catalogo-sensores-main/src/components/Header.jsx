@@ -1,34 +1,50 @@
-// src/components/Header.jsx
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom'; // <-- Agregamos useNavigate
 import { useCartStore } from '../store';
 
-// 1. ACTUALIZAMOS LOS NOMBRES DE LAS CATEGORÍAS (Se eliminó brandsList para mantener limpio)
 const categoriesList = ['SpO2', 'ECG Cables', 'EKG Cables', 'NIBP', 'IBP Cables', 'Temperature', 'Fetal', 'Oxygen Sensors'];
-const otrosList = ['Promociones', 'Nuevos'];
+const otrosList = ['Promotions', 'New Arrivals'];
 
 function Header() {
   const carrito = useCartStore((state) => state.carrito);
   const eliminarDelCarrito = useCartStore((state) => state.eliminarDelCarrito);
   const [isCartOpen, setIsCartOpen] = useState(false);
+  
+  // NUEVO: Lógica para la barra de búsqueda
+  const navigate = useNavigate();
+  const [busqueda, setBusqueda] = useState('');
+
+  const manejarBusqueda = (e) => {
+    e.preventDefault(); // Evita que la página se recargue sola
+    if (busqueda.trim() !== '') {
+      navigate(`/buscar?q=${busqueda}`); // Manda a la URL con el término
+      setBusqueda(''); // Limpia la barra después de buscar
+    }
+  };
 
   return (
     <header className="bg-white shadow-sm sticky top-0 z-50">
       <div className="container mx-auto px-4 py-4 flex flex-wrap items-center justify-between">
         <div className="w-full lg:w-auto mb-4 lg:mb-0">
-          <Link to="/" className="h-10 w-48 bg-blue-900 flex items-center justify-center text-white font-bold text-sm tracking-tighter hover:bg-blue-800 transition-colors">
+          <Link to="/" className="h-10 w-48 bg-blue-900 flex items-center justify-center text-white font-bold text-sm tracking-tighter hover:bg-blue-800 transition-colors rounded">
             MEDSENSORS LOGO
           </Link>
         </div>
 
+        {/* NUEVO: Formulario de búsqueda funcional */}
         <div className="w-full lg:flex-1 lg:mx-12 mb-4 lg:mb-0">
-          <div className="relative">
-            <input type="text" placeholder="Buscar por número de parte, modelo o marca..." 
-                   className="w-full border-2 border-gray-100 rounded-full py-2 px-6 focus:outline-none focus:border-blue-500 shadow-inner" />
-            <button className="absolute right-4 top-2.5 text-blue-600">
+          <form onSubmit={manejarBusqueda} className="relative">
+            <input 
+              type="text" 
+              value={busqueda}
+              onChange={(e) => setBusqueda(e.target.value)}
+              placeholder="Buscar por número de parte (SKU), modelo o marca..." 
+              className="w-full border-2 border-gray-100 rounded-full py-2 px-6 focus:outline-none focus:border-blue-500 shadow-inner text-sm" 
+            />
+            <button type="submit" className="absolute right-4 top-2.5 text-blue-600 hover:text-blue-800 transition-colors">
               <i className="fas fa-search"></i>
             </button>
-          </div>
+          </form>
         </div>
 
         <div className="flex items-center space-x-6">
@@ -43,7 +59,7 @@ function Header() {
           <div className="flex space-x-4 text-blue-900">
             <a href="#" className="hover:text-blue-500 flex flex-col items-center">
               <i className="far fa-user text-lg"></i>
-              <span className="text-[10px] mt-1 font-bold">CUENTA</span>
+              <span className="text-[10px] mt-1 font-bold">ACCOUNT</span>
             </a>
             <button onClick={() => setIsCartOpen(true)} className="hover:text-blue-500 flex flex-col items-center relative cursor-pointer">
               <i className="fas fa-shopping-cart text-lg"></i>
@@ -52,7 +68,7 @@ function Header() {
                   {carrito.length}
                 </span>
               )}
-              <span className="text-[10px] mt-1 font-bold">CARRITO</span>
+              <span className="text-[10px] mt-1 font-bold">YOUR CART</span>
             </button>
           </div>
         </div>
@@ -61,12 +77,12 @@ function Header() {
       <nav className="bg-blue-900 text-white border-t border-blue-800">
         <div className="container mx-auto px-4 flex justify-center space-x-10 text-xs font-bold uppercase tracking-widest relative">
           
-          <Link to="/" className="hover:text-blue-300 transition-colors py-3">Inicio</Link>
+          <Link to="/" className="hover:text-blue-300 transition-colors py-3">Home</Link>
           
           {/* --- MENÚ CATEGORÍAS --- */}
           <div className="relative group cursor-pointer py-3">
             <span className="hover:text-blue-300 transition-colors flex items-center">
-              Categorías <i className="fas fa-chevron-down ml-1 text-[10px]"></i>
+              Categories <i className="fas fa-chevron-down ml-1 text-[10px]"></i>
             </span>
             <div className="absolute top-full left-0 bg-white shadow-xl py-2 w-56 text-gray-800 border rounded opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 z-50">
               {categoriesList.map(item => (
@@ -84,7 +100,7 @@ function Header() {
           {/* --- MENÚ OTROS --- */}
           <div className="relative group cursor-pointer py-3">
             <span className="hover:text-blue-300 transition-colors flex items-center">
-              Otros <i className="fas fa-chevron-down ml-1 text-[10px]"></i>
+              Others<i className="fas fa-chevron-down ml-1 text-[10px]"></i>
             </span>
             <div className="absolute top-full left-0 bg-white shadow-xl py-2 w-48 text-gray-800 border rounded opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 z-50">
               {otrosList.map(item => (
@@ -95,7 +111,7 @@ function Header() {
             </div>
           </div>
 
-          <Link to="/nosotros" className="hover:text-blue-300 transition-colors py-3">Nosotros</Link>
+          <Link to="/nosotros" className="hover:text-blue-300 transition-colors py-3">About Us</Link>
         </div>
       </nav>
 
@@ -106,7 +122,7 @@ function Header() {
         <div className={`absolute right-0 top-0 h-full w-80 bg-white shadow-2xl transform transition-transform duration-300 ${isCartOpen ? 'translate-x-0' : 'translate-x-full'} flex flex-col`}>
           
           <div className="p-4 bg-blue-900 text-white flex justify-between items-center">
-            <h2 className="font-bold tracking-widest uppercase">Tu Carrito</h2>
+            <h2 className="font-bold tracking-widest uppercase">Your Cart</h2>
             <button onClick={() => setIsCartOpen(false)} className="text-white hover:text-red-400">
               <i className="fas fa-times text-xl"></i>
             </button>
@@ -114,22 +130,19 @@ function Header() {
 
           <div className="flex-1 overflow-y-auto p-4 space-y-4">
             {carrito.length === 0 ? (
-              <p className="text-gray-500 text-center mt-10">Tu carrito está vacío.</p>
+              <p className="text-gray-500 text-center mt-10">Your cart is empty.</p>
             ) : (
               carrito.map((producto, index) => (
                 <div key={index} className="flex border-b pb-2 items-center relative group">
-                  
                   <img 
                     src={producto.imagen_url || 'https://via.placeholder.com/50'} 
                     alt={producto.nombre}
                     className="h-12 w-12 object-contain bg-white mr-4 rounded border border-gray-200"
                   />
-                  
                   <div className="flex-1 pr-6">
                     <p className="text-xs font-bold uppercase line-clamp-2">{producto.nombre}</p>
                     <p className="text-blue-600 font-black text-sm mt-1">{producto.precio}</p>
                   </div>
-                  
                   <button 
                     onClick={() => eliminarDelCarrito(index)}
                     className="absolute right-0 text-gray-300 hover:text-red-500 transition-colors cursor-pointer"
@@ -151,7 +164,7 @@ function Header() {
                 </span>
               </div>
               <button className="w-full bg-green-600 text-white py-3 font-bold uppercase tracking-widest hover:bg-green-500 transition-colors rounded">
-                Proceder al Pago
+                Proced to pay
               </button>
             </div>
           )}
