@@ -14,7 +14,7 @@ function Nuevos() {
           <h1 className="text-4xl font-black uppercase tracking-tighter italic">
             Nuevos <span className="text-teal-300">Lanzamientos</span>
           </h1>
-          <p className="mt-2 text-teal-100">Las adiciones más recientes a nuestro catálogo de conectividad médica.</p>
+          <p className="mt-2 text-teal-100">The latest additions to our medical connectivity catalog.</p>
         </div>
       </div>
 

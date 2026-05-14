@@ -17,17 +17,17 @@ function CategoriasPrincipales() {
     <section className="py-16 container mx-auto px-4">
       <div className="flex items-center justify-between mb-10">
         <h2 className="text-xl font-black uppercase tracking-tighter border-l-4 border-blue-600 pl-4">
-          Categorías Principales
+          Main Categories
         </h2>
-        {/* El botón de "Ver Todo" también lo hice funcional */}
+        {/* The "View All" button is also functional */}
         <Link to="/categorias" className="text-xs font-bold text-blue-600 hover:underline">
-          Ver Todo el Catálogo <i className="fas fa-arrow-right ml-1"></i>
+          View All Catalog <i className="fas fa-arrow-right ml-1"></i>
         </Link>
       </div>
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         {categorias.map((cat, index) => (
-          /* Aquí convertimos el div en un <Link> funcional */
+          /* Here we convert the div into a functional <Link> */
           <Link 
             key={index}
             to={`/categorias?tipo=${cat.nombre}`}

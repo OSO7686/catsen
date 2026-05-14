@@ -14,141 +14,125 @@ const mainCategories = [
   { nombre: 'Oxygen Sensors', icon: 'fas fa-lungs' },
 ];
 
+// DICCIONARIO CORREGIDO AL 100%
+const MAPA_SUBCATEGORIAS = [
+  { main: "SpO2", db: "spo2_direct_connect_sensors", title: "Direct-Connect SpO2 Sensors" },
+  { main: "SpO2", db: "spo2_short_sensors", title: "Short SpO2 Sensors" },
+  { main: "SpO2", db: "spo2_adapter_cables", title: "SpO2 Adapter Cables" },
+  { main: "SpO2", db: "spo2_disposable_sensors", title: "Disposable Sp02 Sensors" },
+  { main: "SpO2", db: "spo2_accessories", title: "SpO2 Accessories" },
+  { main: "ECG", db: "ecg_direct_connect_cables", title: "Direct-Connect ECG Cables" },
+  { main: "ECG", db: "ecg_leadwires", title: "ECG Leadwires" },
+  { main: "ECG", db: "ecg_telemetry_leadwires", title: "ECG Telemetry" },
+  { main: "ECG", db: "ecg_trunk_cables", title: "ECG Trunk Cables" },
+  // Corregido el nombre exacto de la BD aquí:
+  { main: "ECG", db: "ecg_disposable_direct_connect_ecg_cables", title: "Disposable Direct-Connect ECG Cables" },
+  { main: "ECG", db: "ecg_disposable_electrodes", title: "Disposable ECG Electrodes" },
+  { main: "ECG", db: "ecg_disposable_leadwires", title: "Disposable ECG Leadwires" },
+  { main: "ECG", db: "ecg_accessories", title: "ECG Accessories" },
+  { main: "EKG", db: "ekg_direct_connect_cables", title: "Direct-Connect EKG Cables" },
+  { main: "EKG", db: "ekg_leadwires", title: "EKG Leadwires" },
+  { main: "EKG", db: "ekg_trunk_cables", title: "EKG Trunk Cables" },
+  { main: "EKG", db: "ekg_accessories", title: "EKG Accessories" },
+  { main: "NIBP", db: "nibp_cuffs", title: "NIBP Cuffs" }, 
+  { main: "NIBP", db: "nibp_hoses", title: "NIBP Hoses" },
+  { main: "NIBP", db: "nibp_connectors", title: "NIBP Connectors" },
+  { main: "NIBP", db: "nibp_disposable_cuffs", title: "Disposable NIBP Cuffs" },
+  { main: "IBP", db: "ibp_adapter_cables", title: "IBP Adapter Cables" },
+  { main: "IBP", db: "ibp_disposable_transducers", title: "IBP Disposable Transducers" },
+  { main: "IBP", db: "ibp_infusion_bags", title: "IBP Infusion Bags" },
+  { main: "Temperature", db: "temperature_reusable_probes", title: "Reusable Temperature Probes" },
+  { main: "Temperature", db: "temperature_disposable_probes", title: "Disposable Temperature Probes" },
+  { main: "Temperature", db: "temperature_adapters", title: "Temperature Adapters" },
+  { main: "Temperature", db: "temperature_accessories", title: "Temperature Accessories" },
+  { main: "Fetal", db: "fetal_ultrasound_transducers", title: "Ultrasound Transducers" },
+  { main: "Fetal", db: "fetal_toco_transducers", title: "Toco Transducers" },
+  { main: "Fetal", db: "fetal_transducers_repair_cables", title: "Transducers Repair Cables" },
+  { main: "Fetal", db: "fetal_transducers_repair_cases", title: "Transducers Repair Cases" },
+  { main: "Fetal", db: "fetal_fse_cables", title: "FSE Cables" },
+  { main: "Fetal", db: "fetal_accessories", title: "Fetal Accessories" },
+  { main: "Oxygen Sensors", db: "o2_sensors", title: "Oxygen Sensors" },
+  { main: "Oxygen Sensors", db: "o2_flow_sensors", title: "Flow Sensors" },
+  { main: "Oxygen Sensors", db: "o2_etco2_sensors", title: "EtCO2 Sensors" }
+];
+
 function Categorias() {
   const agregarAlCarrito = useCartStore((state) => state.agregarAlCarrito);
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   
- // Atrapamos la URL y la pasamos a minúsculas
   const tipoURL = (searchParams.get('tipo') || 'SpO2').toLowerCase().trim();
   
-  // 1. Filtro estricto: Buscamos si la URL es EXACTAMENTE igual al nombre de la categoría
   let categoriaEncontrada = mainCategories.find(
     (cat) => cat.nombre.toLowerCase() === tipoURL
   );
 
-  // 2. Filtro flexible: Si no hubo match exacto, buscamos si la URL CONTIENE el nombre
   if (!categoriaEncontrada) {
     categoriaEncontrada = mainCategories.find(
       (cat) => tipoURL.includes(cat.nombre.toLowerCase())
     );
   }
 
-  // Si después de todo no encuentra nada, el seguro de vida lo manda a SpO2
   const categoriaPrincipal = categoriaEncontrada?.nombre || 'SpO2';
 
-
-  const [catalogoCompleto, setCatalogoCompleto] = useState([]);
+  const [productosDeLaCategoria, setProductosDeLaCategoria] = useState([]);
   const [cargando, setCargando] = useState(true);
-
+  
   const [subcatActiva, setSubcatActiva] = useState('Todas');
   const [paginaActual, setPaginaActual] = useState(1);
 
   const ITEMS_POR_PAGINA = 30;
 
+  // NUEVO CEREBRO: BURLANDO EL LÍMITE DE 1000 PRODUCTOS DE SUPABASE
   useEffect(() => {
-    async function obtenerCatalogoGigante() {
+    async function obtenerProductosPorCategoria() {
       setCargando(true);
-
-      // --- MAPA DE TABLAS: El código leerá cada una de estas tablas ---
-      // Asegúrate de que el 'nombre_tabla' sea EXACTAMENTE igual al de tu menú en Supabase
-      const tablasDeSupabase = [
-        // SpO2
-        { nombre_tabla: "spo2_direct_connect_sensors", main: "SpO2", sub: "Direct-Connect SpO2 Sensors" },
-        { nombre_tabla: "spo2_short_sensors", main: "SpO2", sub: "Short SpO2 Sensors" },
-        { nombre_tabla: "spo2_adapter_cables", main: "SpO2", sub: "SpO2 Adapter Cables" },
-        { nombre_tabla: "spo2_disposable_sensors", main: "SpO2", sub: "Disposable Sp02 Sensors" },
-        { nombre_tabla: "spo2_accessories", main: "SpO2", sub: "SpO2 Accessories" },
-        // ECG (Ajusta estos nombres si en Supabase dicen otra cosa)
-        { nombre_tabla: "ecg_direct_connect_cables", main: "ECG", sub: "Direct-Connect ECG Cables" },
-        { nombre_tabla: "ecg_leadwires", main: "ECG", sub: "ECG Leadwires" },
-        { nombre_tabla: "ecg_telemetry_leadwires", main: "ECG", sub: "ECG Telemetry" }, // Basado en tu imagen
-        { nombre_tabla: "ecg_trunk_cables", main: "ECG", sub: "ECG Trunk Cables" },
-        { nombre_tabla: "ecg_disposable_direct_connect_ecg_cables", main: "ECG", sub: "Disposable Direct-Connect ECG Cables" },
-        { nombre_tabla: "ecg_disposable_electrodes", main: "ECG", sub: "Disposable ECG Electrodes" },
-        { nombre_tabla: "ecg_disposable_leadwires", main: "ECG", sub: "Disposable ECG Leadwires" },
-        { nombre_tabla: "ecg_accessories", main: "ECG", sub: "ECG Accessories" },
-        // EKG
-        { nombre_tabla: "ekg_leadwires", main: "EKG", sub: "EKG Leadwires" },
-        { nombre_tabla: "ekg_trunk_cables", main: "EKG", sub: "EKG Trunk Cables" },
-        { nombre_tabla: "ekg_accessories", main: "EKG", sub: "EKG Accessories" },
-        // NIBP
-        { nombre_tabla: "nibp_cuffd", main: "NIBP", sub: "NIBP Cuffs" },
-        { nombre_tabla: "nibp_hoses", main: "NIBP", sub: "NIBP Hoses" },
-        { nombre_tabla: "nibp_connectors", main: "NIBP", sub: "NIBP Connectors" },
-        { nombre_tabla: "nibp_disposable_cuffs", main: "NIBP", sub: "Disposable NIBP Cuffs" },
-        // IBP
-        { nombre_tabla: "ibp_adapter_cables", main: "IBP", sub: "IBP Adapter Cables" }, // Basado en tu imagen
-        { nombre_tabla: "ibp_disposable_transducers", main: "IBP", sub: "IBP Disposable Transducers" },
-        { nombre_tabla: "ibp_infusion_bags", main: "IBP", sub: "IBP Infusion Bags" },
-        // Temperature
-        { nombre_tabla: "temperature_reusable_probes", main: "Temperature", sub: "Reusable Temperature Probes" },
-        { nombre_tabla: "temperature_disposable_probes", main: "Temperature", sub: "Disposable Temperature Probes" },
-        { nombre_tabla: "temperature_adapters", main: "Temperature", sub: "Temperature Adapters" },
-        { nombre_tabla: "temperature_accessories", main: "Temperature", sub: "Temperature Accessories" },
-        // Fetal
-        { nombre_tabla: "fetal_ultrasound_transducers", main: "Fetal", sub: "Ultrasound Transducers" },
-        { nombre_tabla: "fetal_toco_transducers", main: "Fetal", sub: "Toco Transducers" },
-        { nombre_tabla: "fetal_transducers_repair_cables", main: "Fetal", sub: "Transducers Repair Cables" },
-        { nombre_tabla: "fetal_transducers_repair_cases", main: "Fetal", sub: "Transducers Repair Cases" },
-        { nombre_tabla: "fetal_fse_cables", main: "Fetal", sub: "FSE Cables" },
-        { nombre_tabla: "fetal_accessories", main: "Fetal", sub: "Fetal Accessories" },
-        // Oxygen
-        { nombre_tabla: "o2_sensors", main: "Oxygen Sensors", sub: "Oxygen Sensors" },
-        { nombre_tabla: "o2_flow_sensors", main: "Oxygen Sensors", sub: "Flow Sensors" },
-        { nombre_tabla: "o2_etco2_sensors", main: "Oxygen Sensors", sub: "EtCO2 Sensors" }
-      ];
-
       try {
-        // Disparamos la lectura de TODAS las tablas de forma simultánea (en paralelo)
-        const promesasDeDescarga = tablasDeSupabase.map(async (infoTabla) => {
-          const { data, error } = await supabase.from(infoTabla.nombre_tabla).select('*');
-          
-          // Si la tabla no existe o está vacía, regresamos un arreglo vacío
-          if (error || !data) {
-            if (error) console.warn(`Error leyendo tabla ${infoTabla.nombre_tabla}:`, error.message);
-            return [];
+        let todosLosProductos = [];
+        let rangoInicio = 0;
+        let cantidadPorLote = 1000;
+        let seguirBuscando = true;
+
+        // Pedimos por lotes de 1000 hasta que traiga TODOS los productos de esa categoría
+        while (seguirBuscando) {
+          const { data, error } = await supabase
+            .from('productos_medicos')
+            .select('*')
+            .eq('categoria', categoriaPrincipal)
+            .range(rangoInicio, rangoInicio + cantidadPorLote - 1);
+
+          if (error) throw error;
+
+          todosLosProductos = [...todosLosProductos, ...data];
+
+          // Si trajo menos de 1000, significa que ya no hay más páginas en Supabase
+          if (data.length < cantidadPorLote) {
+            seguirBuscando = false;
+          } else {
+            rangoInicio += cantidadPorLote;
           }
+        }
 
-          // A cada producto que descargamos, le "inyectamos" su categoría y subcategoría
-          return data.map(producto => ({
-            ...producto,
-            categoria: infoTabla.main,
-            subcategoria: infoTabla.sub
-          }));
-        });
-
-        // Esperamos a que TODAS las tablas terminen de descargarse
-        const resultadosSeparados = await Promise.all(promesasDeDescarga);
-        
-        // Unimos todas las tablitas chiquitas en un solo catálogo gigante
-        const unificado = resultadosSeparados.flat();
-
-        setCatalogoCompleto(unificado);
-        console.log(`¡Éxito! Se cargaron ${unificado.length} productos en total.`);
-
+        setProductosDeLaCategoria(todosLosProductos);
       } catch (errorGeneral) {
-        console.error("Fallo crítico al descargar el catálogo:", errorGeneral);
+        console.error("Error al descargar el catálogo:", errorGeneral);
       }
-
       setCargando(false);
     }
-
-    obtenerCatalogoGigante();
-  }, []);
+    obtenerProductosPorCategoria();
+  }, [categoriaPrincipal]);
 
   useEffect(() => {
     setSubcatActiva('Todas');
     setPaginaActual(1);
   }, [categoriaPrincipal]);
 
-  const manejarCambioSubcategoria = (nombreSub) => {
-    setSubcatActiva(nombreSub);
+  const manejarCambioSubcategoria = (nombreSubDB) => {
+    setSubcatActiva(nombreSubDB);
     setPaginaActual(1); 
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  const productosDeLaCategoria = catalogoCompleto.filter(prod => prod.categoria === categoriaPrincipal);
   const productosFiltrados = subcatActiva === 'Todas' 
     ? productosDeLaCategoria 
     : productosDeLaCategoria.filter(prod => prod.subcategoria === subcatActiva);
@@ -192,13 +176,13 @@ function Categorias() {
     return paginas;
   };
 
-  const subcategoriasUnicas = [...new Set(productosDeLaCategoria.map(p => p.subcategoria))].filter(Boolean);
+  const infoSubActiva = MAPA_SUBCATEGORIAS.find(m => m.db === subcatActiva);
+  const tituloSubcategoriaActiva = infoSubActiva ? infoSubActiva.title : subcatActiva;
 
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="flex flex-col lg:flex-row gap-8">
         
-        {/* SIDEBAR ÚNICA DINÁMICA CON SCROLL INTERNO */}
         <aside className="w-full lg:w-1/4 h-fit sticky top-24">
           <div className="bg-white rounded-2xl shadow-sm border border-gray-100 flex flex-col max-h-[75vh]">
             <div className="bg-blue-900 p-4 shrink-0 rounded-t-2xl">
@@ -208,6 +192,7 @@ function Categorias() {
             <nav className="p-2 overflow-y-auto">
               {mainCategories.map((cat) => {
                 const estaActiva = categoriaPrincipal === cat.nombre;
+                const subsDeEsteMenu = MAPA_SUBCATEGORIAS.filter(sub => sub.main === cat.nombre);
                 
                 return (
                   <div key={cat.nombre} className="mb-1">
@@ -224,7 +209,7 @@ function Categorias() {
                       <i className={`fas fa-chevron-right text-[10px] transition-transform duration-300 ${estaActiva ? 'rotate-90 text-blue-600' : 'text-gray-300'}`}></i>
                     </button>
 
-                    {estaActiva && !cargando && (
+                    {estaActiva && (
                       <ul className="mt-1 ml-9 space-y-1 border-l-2 border-blue-100 pl-2 py-2">
                         <li>
                           <button
@@ -236,15 +221,16 @@ function Categorias() {
                             • Ver Todo {cat.nombre}
                           </button>
                         </li>
-                        {subcategoriasUnicas.map(sub => (
-                          <li key={sub}>
+                        
+                        {subsDeEsteMenu.map(sub => (
+                          <li key={sub.db}>
                             <button
-                              onClick={() => manejarCambioSubcategoria(sub)}
+                              onClick={() => manejarCambioSubcategoria(sub.db)}
                               className={`w-full text-left px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors ${
-                                subcatActiva === sub ? 'text-blue-600 bg-blue-100/50' : 'text-gray-400 hover:text-blue-500'
+                                subcatActiva === sub.db ? 'text-blue-600 bg-blue-100/50' : 'text-gray-400 hover:text-blue-500'
                               }`}
                             >
-                              • {sub}
+                              • {sub.title}
                             </button>
                           </li>
                         ))}
@@ -257,12 +243,11 @@ function Categorias() {
           </div>
         </aside>
 
-        {/* CONTENIDO PRINCIPAL */}
         <main className="flex-1">
           {cargando ? (
             <div className="flex justify-center items-center h-64 bg-white rounded-3xl border border-gray-100 shadow-sm flex-col gap-4">
               <i className="fas fa-spinner fa-spin text-4xl text-blue-600"></i>
-              <p className="text-xl text-gray-500 font-bold animate-pulse">Sincronizando con Supabase...</p>
+              <p className="text-xl text-gray-500 font-bold animate-pulse">Cargando catálogo...</p>
             </div>
           ) : (
             <>
@@ -273,8 +258,9 @@ function Categorias() {
                     <span>/</span>
                     <span className="text-blue-900">{categoriaPrincipal}</span>
                   </nav>
+                  
                   <h2 className="text-4xl font-black text-gray-900 uppercase tracking-tighter">
-                    {subcatActiva === 'Todas' ? categoriaPrincipal : subcatActiva}
+                    {subcatActiva === 'Todas' ? categoriaPrincipal : tituloSubcategoriaActiva}
                   </h2>
                 </div>
                 <p className="text-gray-400 font-bold text-sm bg-gray-100 px-4 py-2 rounded-full h-fit">
@@ -289,11 +275,11 @@ function Categorias() {
                 </div>
               ) : (
                 <>
-                  {/* Grid de productos */}
                   <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6">
                     {productosPagina.map((producto, index) => (
                       <div key={index} className="group bg-white border border-gray-100 rounded-3xl p-5 hover:shadow-2xl hover:shadow-blue-100 transition-all duration-500 flex flex-col relative overflow-hidden">
-                        <Link to={`/producto/${producto.sku}`} className="flex flex-col flex-1">
+                        
+                        <Link to={`/producto/${producto.mi_sku}`} className="flex flex-col flex-1">
                           <div className="h-52 w-full bg-gray-50 rounded-2xl mb-5 flex items-center justify-center p-6 overflow-hidden">
                             <img 
                               src={producto.imagen_url || 'https://via.placeholder.com/150'} 
@@ -305,7 +291,9 @@ function Categorias() {
                             {producto.nombre}
                           </h4>
                           <div className="flex items-center gap-2 mb-4">
-                            <span className="text-[10px] font-black bg-blue-50 text-blue-600 px-2 py-1 rounded uppercase tracking-tighter">SKU: {producto.sku}</span>
+                            <span className="text-[10px] font-black bg-blue-50 text-blue-600 px-2 py-1 rounded uppercase tracking-tighter">
+                              SKU: {producto.mi_sku}
+                            </span>
                           </div>
                         </Link>
                         <div className="flex items-center justify-between mt-auto pt-4 border-t border-gray-50">
@@ -321,7 +309,6 @@ function Categorias() {
                     ))}
                   </div>
 
-                  {/* PAGINACIÓN */}
                   {totalPaginas > 1 && (
                     <div className="flex justify-center items-center gap-3 mt-16 bg-white p-4 rounded-2xl shadow-sm border w-fit mx-auto">
                       <button 

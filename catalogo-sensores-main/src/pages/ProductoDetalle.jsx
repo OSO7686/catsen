@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { supabase } from '../supabaseClient'; 
 
 function ProductoDetalle() {
+  // Ahora "id" representa "mi_sku" en la URL
   const { id } = useParams();
   const agregarAlCarrito = useCartStore((state) => state.agregarAlCarrito);
 
@@ -12,52 +13,49 @@ function ProductoDetalle() {
   const [varianteActiva, setVarianteActiva] = useState(null);
   const [cargando, setCargando] = useState(true);
   
-  // Nuevo estado para el selector de cantidad (igual que la competencia)
   const [cantidad, setCantidad] = useState(1);
 
-  // Lista maestra de tus 30 tablas
-  const tablasDeSupabase = [
-    "spo2_direct_connect_sensors", "spo2_short_sensors", "spo2_adapter_cables", "spo2_disposable_sensors", "spo2_accessories",
-    "ecg_direct_connect_cables", "ecg_leadwires", "ecg_telemetry_leadwires", "ecg_trunk_cables", 
-    "ecg_disposable_direct_connect_ecg_cables", "ecg_disposable_electrodes", "ecg_disposable_leadwires", "ecg_accessories",
-    "ekg_leadwires", "ekg_trunk_cables", "ekg_accessories",
-    "nibp_cuffd", "nibp_hoses", "nibp_connectors", "nibp_disposable_cuffs",
-    "ibp_adapter_cables", "ibp_disposable_transducers", "ibp_infusion_bags",
-    "temperature_reusable_probes", "temperature_disposable_probes", "temperature_adapters", "temperature_accessories",
-    "fetal_ultrasound_transducers", "fetal_toco_transducers", "fetal_transducers_repair_cables", 
-    "fetal_transducers_repair_cases", "fetal_fse_cables", "fetal_accessories",
-    "o2_sensors", "o2_flow_sensors", "o2_etco2_sensors"
-  ];
-
+  // NUEVO CEREBRO OPTIMIZADO PARA EL DETALLE DEL PRODUCTO
   useEffect(() => {
-    async function cargarTodaLaInformacion() {
+    async function cargarInformacionDelProducto() {
       setCargando(true);
       setVarianteActiva(null);
       setCantidad(1);
 
       try {
-        const promesas = tablasDeSupabase.map(tabla => 
-          supabase.from(tabla).select('*')
-        );
-        const resultados = await Promise.all(promesas);
-        const catalogoUnificado = resultados.flatMap(res => res.data || []);
-        const productoEncontrado = catalogoUnificado.find(p => p.sku === id);
+        // 1. Buscamos EL producto exacto usando tu nuevo SKU
+        const { data: productoExacto, error: errorProducto } = await supabase
+          .from('productos_medicos')
+          .select('*')
+          .eq('mi_sku', id)
+          .single(); // Pedimos específicamente 1 solo registro
 
-        if (productoEncontrado) {
-          setProducto(productoEncontrado);
-          // Buscamos variantes
-          const listaVariantes = catalogoUnificado.filter(p => 
-            p.nombre === productoEncontrado.nombre && 
-            p.url === productoEncontrado.url
-          );
-          setVariantes(listaVariantes);
+        if (errorProducto) throw errorProducto;
+
+        if (productoExacto) {
+          setProducto(productoExacto);
+
+          // 2. Buscamos las VARIANTES: mismos productos pero con diferente "tipo" (ej. Adulto, Pediátrico)
+          // Lo hacemos usando la misma URL de origen o nombre base
+          const { data: listaVariantes, error: errorVariantes } = await supabase
+            .from('productos_medicos')
+            .select('*')
+            .eq('url', productoExacto.url) // Esto garantiza que traiga la familia correcta
+
+          if (!errorVariantes && listaVariantes) {
+            setVariantes(listaVariantes);
+          }
         }
+
       } catch (error) {
         console.error("Error cargando detalles del producto:", error);
       }
       setCargando(false);
     }
-    cargarTodaLaInformacion();
+
+    if (id) {
+      cargarInformacionDelProducto();
+    }
   }, [id]);
 
   const manejarCambioCantidad = (valor) => {
@@ -66,14 +64,10 @@ function ProductoDetalle() {
     }
   };
 
-const agregarConCantidad = (prod) => {
-    // Hacemos un ciclo para enviar la señal de "agregar" las veces exactas que marca el contador
+  const agregarConCantidad = (prod) => {
     for (let i = 0; i < cantidad; i++) {
       agregarAlCarrito(prod);
     }
-    
-    // Opcional pero recomendado: regresamos el contador a 1 después de agregarlo
-    // para que esté listo si quiere comprar otra cosa
     setCantidad(1);
   };
 
@@ -99,7 +93,7 @@ const agregarConCantidad = (prod) => {
   };
 
   const specs = parseTabla(actual.especificaciones);
-  const oem = parseTabla(actual.oemCross);
+  const oem = parseTabla(actual.oemcross); // Corregido a minúsculas, como quedó en la base de datos
   const compat = parseTabla(actual.compatibility);
 
   return (
@@ -110,7 +104,8 @@ const agregarConCantidad = (prod) => {
         <nav className="text-[11px] font-bold uppercase tracking-widest text-gray-400 mb-8 flex gap-2">
           <Link to="/" className="hover:text-blue-600">Home</Link>
           <span>/</span>
-          <Link to="/categorias" className="hover:text-blue-600">Medical Catalog</Link>
+          {/* Hacemos dinámico el breadcrumb a su categoría */}
+          <Link to={`/categorias?tipo=${actual.categoria}`} className="hover:text-blue-600">{actual.categoria}</Link>
           <span>/</span>
           <span className="text-blue-900 truncate">{actual.nombre}</span>
         </nav>
@@ -126,12 +121,10 @@ const agregarConCantidad = (prod) => {
                 alt={actual.nombre}
                 className="w-full max-h-[400px] object-contain mix-blend-multiply transition-transform duration-500 group-hover:scale-105"
               />
-              {/* Botón de zoom ficticio */}
               <button className="absolute bottom-4 right-4 bg-white border border-gray-200 p-2 rounded text-gray-400 hover:text-blue-600 shadow-sm">
                 <i className="fas fa-search-plus"></i>
               </button>
             </div>
-            {/* Thumbnails (Si tuvieras más imágenes, irían aquí. Pongo 3 iguales de ejemplo de diseño) */}
             <div className="grid grid-cols-4 gap-2">
               <div className="border border-blue-600 rounded p-2 cursor-pointer opacity-100"><img src={actual.imagen_url} alt="thumb" className="h-12 w-full object-contain mix-blend-multiply" /></div>
               <div className="border border-gray-200 rounded p-2 cursor-pointer opacity-50 hover:opacity-100 transition"><img src={actual.imagen_url} alt="thumb" className="h-12 w-full object-contain mix-blend-multiply" /></div>
@@ -149,18 +142,20 @@ const agregarConCantidad = (prod) => {
               <div className="flex text-blue-500 text-sm">
                 <i className="fas fa-star"></i><i className="fas fa-star"></i><i className="fas fa-star"></i><i className="fas fa-star"></i><i className="fas fa-star"></i>
               </div>
-              <span className="text-sm font-bold text-gray-500">Part Number: <span className="text-gray-900">{actual.sku}</span></span>
+              <span className="text-sm font-bold text-gray-500">SKU: <span className="text-blue-600">{actual.mi_sku}</span></span>
+              {/* Opción para mostrar también el de la competencia discretamente */}
+              <span className="text-xs text-gray-400 ml-2">(Ref OEM: {actual.sku_competencia})</span>
             </div>
 
             <div className="border-t border-gray-100 mb-6"></div>
 
-            {/* GRID DE VARIANTES (Igual al de la competencia) */}
+            {/* GRID DE VARIANTES */}
             {variantes.length > 1 && (
               <div>
                 <h3 className="font-bold text-gray-800 text-sm mb-3">Opciones Disponibles:</h3>
                 <div className="grid grid-cols-2 gap-2">
                   {variantes.map((v, i) => {
-                    const isActive = actual.sku === v.sku;
+                    const isActive = actual.mi_sku === v.mi_sku; // Actualizado a mi_sku
                     return (
                       <button
                         key={i}

@@ -160,7 +160,7 @@ function Header() {
               <div className="flex justify-between items-center mb-4 font-black">
                 <span>TOTAL:</span>
                 <span className="text-blue-900 text-lg">
-                  ${carrito.reduce((total, item) => total + parseFloat(item.precio.replace('$', '').replace(',', '').replace(' MXN', '')), 0).toLocaleString('es-MX', { minimumFractionDigits: 2 })} MXN
+                  ${carrito.reduce((total, item) => total + parseFloat(item.precio.replace('$', '').replace(',', '').replace(' US', '')), 0).toLocaleString('es-MX', { minimumFractionDigits: 2 })} MXN
                 </span>
               </div>
               <button className="w-full bg-green-600 text-white py-3 font-bold uppercase tracking-widest hover:bg-green-500 transition-colors rounded">
