@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom'; // <-- Agregamos useNavigate
+import { Link, useNavigate } from 'react-router-dom';
 import { useCartStore } from '../store';
 
 const categoriesList = ['SpO2', 'ECG Cables', 'EKG Cables', 'NIBP', 'IBP Cables', 'Temperature', 'Fetal', 'Oxygen Sensors'];
@@ -10,15 +10,14 @@ function Header() {
   const eliminarDelCarrito = useCartStore((state) => state.eliminarDelCarrito);
   const [isCartOpen, setIsCartOpen] = useState(false);
   
-  // NUEVO: Lógica para la barra de búsqueda
   const navigate = useNavigate();
   const [busqueda, setBusqueda] = useState('');
 
   const manejarBusqueda = (e) => {
-    e.preventDefault(); // Evita que la página se recargue sola
+    e.preventDefault(); 
     if (busqueda.trim() !== '') {
-      navigate(`/buscar?q=${busqueda}`); // Manda a la URL con el término
-      setBusqueda(''); // Limpia la barra después de buscar
+      navigate(`/buscar?q=${busqueda}`); 
+      setBusqueda(''); 
     }
   };
 
@@ -31,7 +30,6 @@ function Header() {
           </Link>
         </div>
 
-        {/* NUEVO: Formulario de búsqueda funcional */}
         <div className="w-full lg:flex-1 lg:mx-12 mb-4 lg:mb-0">
           <form onSubmit={manejarBusqueda} className="relative">
             <input 
@@ -63,9 +61,10 @@ function Header() {
             </a>
             <button onClick={() => setIsCartOpen(true)} className="hover:text-blue-500 flex flex-col items-center relative cursor-pointer">
               <i className="fas fa-shopping-cart text-lg"></i>
+              {/* Actualizado para sumar cantidades totales */}
               {carrito.length > 0 && (
                 <span className="absolute -top-2 -right-2 bg-red-500 text-white text-[10px] rounded-full h-4 w-4 flex items-center justify-center font-bold">
-                  {carrito.length}
+                  {carrito.reduce((sum, item) => sum + (item.cantidad || 1), 0)}
                 </span>
               )}
               <span className="text-[10px] mt-1 font-bold">YOUR CART</span>
@@ -76,10 +75,8 @@ function Header() {
       
       <nav className="bg-blue-900 text-white border-t border-blue-800">
         <div className="container mx-auto px-4 flex justify-center space-x-10 text-xs font-bold uppercase tracking-widest relative">
-          
           <Link to="/" className="hover:text-blue-300 transition-colors py-3">Home</Link>
           
-          {/* --- MENÚ CATEGORÍAS --- */}
           <div className="relative group cursor-pointer py-3">
             <span className="hover:text-blue-300 transition-colors flex items-center">
               Categories <i className="fas fa-chevron-down ml-1 text-[10px]"></i>
@@ -97,7 +94,6 @@ function Header() {
             </div>
           </div>
 
-          {/* --- MENÚ OTROS --- */}
           <div className="relative group cursor-pointer py-3">
             <span className="hover:text-blue-300 transition-colors flex items-center">
               Others<i className="fas fa-chevron-down ml-1 text-[10px]"></i>
@@ -115,7 +111,7 @@ function Header() {
         </div>
       </nav>
 
-      {/* --- PANEL LATERAL DEL CARRITO --- */}
+      {/* PANEL LATERAL DEL CARRITO */}
       <div className={`fixed inset-0 bg-black/50 transition-opacity z-50 ${isCartOpen ? 'opacity-100 visible' : 'opacity-0 invisible'}`}>
         <div className="absolute inset-0" onClick={() => setIsCartOpen(false)}></div>
         
@@ -141,7 +137,10 @@ function Header() {
                   />
                   <div className="flex-1 pr-6">
                     <p className="text-xs font-bold uppercase line-clamp-2">{producto.nombre}</p>
-                    <p className="text-blue-600 font-black text-sm mt-1">{producto.precio}</p>
+                    <p className="text-blue-600 font-black text-sm mt-1">
+                      ${Number(producto.precio).toLocaleString('en-US', { minimumFractionDigits: 2 })}
+                      {producto.cantidad > 1 && <span className="text-gray-400 text-[10px] ml-2">x{producto.cantidad}</span>}
+                    </p>
                   </div>
                   <button 
                     onClick={() => eliminarDelCarrito(index)}
@@ -160,11 +159,12 @@ function Header() {
               <div className="flex justify-between items-center mb-4 font-black">
                 <span>TOTAL:</span>
                 <span className="text-blue-900 text-lg">
-                  ${carrito.reduce((total, item) => total + parseFloat(item.precio.replace('$', '').replace(',', '').replace(' US', '')), 0).toLocaleString('es-MX', { minimumFractionDigits: 2 })} MXN
+                  {/* Cálculo matemático directo con cantidad */}
+                  ${carrito.reduce((total, item) => total + (Number(item.precio) * (item.cantidad || 1)), 0).toLocaleString('en-US', { minimumFractionDigits: 2 })} MXN
                 </span>
               </div>
               <button className="w-full bg-green-600 text-white py-3 font-bold uppercase tracking-widest hover:bg-green-500 transition-colors rounded">
-                Proced to pay
+                Proceed to pay
               </button>
             </div>
           )}

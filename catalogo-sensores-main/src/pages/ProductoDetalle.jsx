@@ -1,300 +1,227 @@
+// src/pages/ProductoDetalle.jsx
+import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
+import { useProducto } from '../hooks/useProducto';
 import { useCartStore } from '../store';
-import { useState, useEffect } from 'react';
-import { supabase } from '../supabaseClient'; 
 
-function ProductoDetalle() {
-  // Ahora "id" representa "mi_sku" en la URL
+const ProductoDetalle = () => {
   const { id } = useParams();
+  const { producto, variantes, loading, error } = useProducto(id); 
+  const [cantidad, setCantidad] = useState(1);
   const agregarAlCarrito = useCartStore((state) => state.agregarAlCarrito);
 
-  const [producto, setProducto] = useState(null);
-  const [variantes, setVariantes] = useState([]);
-  const [varianteActiva, setVarianteActiva] = useState(null);
-  const [cargando, setCargando] = useState(true);
-  
-  const [cantidad, setCantidad] = useState(1);
-
-  // NUEVO CEREBRO OPTIMIZADO PARA EL DETALLE DEL PRODUCTO
+  // Reinicia la cantidad a 1 cada vez que cambiamos de producto
   useEffect(() => {
-    async function cargarInformacionDelProducto() {
-      setCargando(true);
-      setVarianteActiva(null);
-      setCantidad(1);
-
-      try {
-        // 1. Buscamos EL producto exacto usando tu nuevo SKU
-        const { data: productoExacto, error: errorProducto } = await supabase
-          .from('productos_medicos')
-          .select('*')
-          .eq('mi_sku', id)
-          .single(); // Pedimos específicamente 1 solo registro
-
-        if (errorProducto) throw errorProducto;
-
-        if (productoExacto) {
-          setProducto(productoExacto);
-
-          // 2. Buscamos las VARIANTES: mismos productos pero con diferente "tipo" (ej. Adulto, Pediátrico)
-          // Lo hacemos usando la misma URL de origen o nombre base
-          const { data: listaVariantes, error: errorVariantes } = await supabase
-            .from('productos_medicos')
-            .select('*')
-            .eq('url', productoExacto.url) // Esto garantiza que traiga la familia correcta
-
-          if (!errorVariantes && listaVariantes) {
-            setVariantes(listaVariantes);
-          }
-        }
-
-      } catch (error) {
-        console.error("Error cargando detalles del producto:", error);
-      }
-      setCargando(false);
-    }
-
-    if (id) {
-      cargarInformacionDelProducto();
-    }
+    setCantidad(1);
   }, [id]);
 
-  const manejarCambioCantidad = (valor) => {
-    if (cantidad + valor >= 1) {
-      setCantidad(cantidad + valor);
-    }
-  };
+  if (loading) return (
+    <div className="min-h-screen flex flex-col justify-center items-center gap-4">
+      <i className="fas fa-spinner fa-spin text-4xl text-blue-600"></i>
+      <p className="text-gray-500 font-bold">Cargando detalles...</p>
+    </div>
+  );
 
-  const agregarConCantidad = (prod) => {
-    for (let i = 0; i < cantidad; i++) {
-      agregarAlCarrito(prod);
-    }
-    setCantidad(1);
-  };
+  if (error || !producto) return (
+    <div className="p-20 text-center">
+      <h2 className="text-2xl font-bold text-gray-800">Producto no encontrado.</h2>
+      <p className="text-gray-500">El SKU {id} no existe en nuestro catálogo.</p>
+    </div>
+  );
 
-  if (cargando) {
-    return (
-      <div className="container mx-auto px-4 py-32 text-center flex flex-col items-center gap-4">
-        <i className="fas fa-spinner fa-spin text-5xl text-blue-600"></i>
-        <p className="text-xl text-gray-500 font-bold animate-pulse">Cargando ficha técnica...</p>
-      </div>
-    );
-  }
-
-  if (!producto) return <div className="text-center py-32 text-2xl font-bold text-gray-800">Producto no encontrado</div>;
-
-  const actual = varianteActiva || producto;
-
-  const parseTabla = (texto) => {
-    if (!texto || texto === "Sin tabla") return [];
-    return texto.split(' | ').map(item => {
-      const [clave, valor] = item.split(': ');
-      return { clave: clave?.trim(), valor: valor?.trim() };
-    }).filter(item => item.clave && item.valor);
-  };
-
-  const specs = parseTabla(actual.especificaciones);
-  const oem = parseTabla(actual.oemcross); // Corregido a minúsculas, como quedó en la base de datos
-  const compat = parseTabla(actual.compatibility);
+  // Unimos el producto actual y las variantes
+  const todasLasOpciones = [producto, ...(variantes || [])].filter(
+    (v, i, a) => v && a.findIndex(t => t?.mi_sku === v?.mi_sku) === i
+  ).sort((a, b) => (a?.tipo || '').localeCompare(b?.tipo || ''));
 
   return (
     <div className="bg-white min-h-screen pb-20">
-      <div className="container mx-auto px-4 py-8 max-w-7xl">
+      <div className="container mx-auto px-4 py-6 max-w-[1200px]">
         
-        {/* BREADCRUMBS (Migas de pan) */}
-        <nav className="text-[11px] font-bold uppercase tracking-widest text-gray-400 mb-8 flex gap-2">
-          <Link to="/" className="hover:text-blue-600">Home</Link>
-          <span>/</span>
-          {/* Hacemos dinámico el breadcrumb a su categoría */}
-          <Link to={`/categorias?tipo=${actual.categoria}`} className="hover:text-blue-600">{actual.categoria}</Link>
-          <span>/</span>
-          <span className="text-blue-900 truncate">{actual.nombre}</span>
+        {/* BREADCRUMBS */}
+        <nav className="text-xs text-gray-300 mb-8 flex gap-2">
+           <Link to="/" className="hover:text-blue-600">Home</Link>
+           <span>›</span>
+           <Link to={`/categorias?tipo=${producto.categoria}`} className="hover:text-blue-600">{producto.categoria}</Link>
+           <span>›</span>
+           <span className="text-gray-400">{producto.nombre}</span>
         </nav>
 
-        {/* ================= PARTE SUPERIOR: 3 COLUMNAS ================= */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 mb-16">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 mb-16">
           
-          {/* COLUMNA 1: IMÁGENES (5 columnas de ancho) */}
+          {/* COLUMNA 1: IMÁGENES */}
           <div className="lg:col-span-5">
-            <div className="border border-gray-100 rounded-lg p-8 flex items-center justify-center mb-4 relative group">
+            <div className="flex items-center justify-center mb-4 relative">
               <img 
-                src={actual.imagen_url || 'https://via.placeholder.com/500'} 
-                alt={actual.nombre}
-                className="w-full max-h-[400px] object-contain mix-blend-multiply transition-transform duration-500 group-hover:scale-105"
+                src={producto.imagen_url || 'https://via.placeholder.com/500'} 
+                alt={producto.nombre}
+                className="w-full max-h-[350px] object-contain mix-blend-multiply"
               />
-              <button className="absolute bottom-4 right-4 bg-white border border-gray-200 p-2 rounded text-gray-400 hover:text-blue-600 shadow-sm">
-                <i className="fas fa-search-plus"></i>
-              </button>
             </div>
-            <div className="grid grid-cols-4 gap-2">
-              <div className="border border-blue-600 rounded p-2 cursor-pointer opacity-100"><img src={actual.imagen_url} alt="thumb" className="h-12 w-full object-contain mix-blend-multiply" /></div>
-              <div className="border border-gray-200 rounded p-2 cursor-pointer opacity-50 hover:opacity-100 transition"><img src={actual.imagen_url} alt="thumb" className="h-12 w-full object-contain mix-blend-multiply" /></div>
+            <div className="flex gap-2">
+               <div className="w-16 h-16 border border-gray-200 p-1 cursor-pointer hover:border-blue-500 transition-colors">
+                 <img src={producto.imagen_url} className="w-full h-full object-contain mix-blend-multiply" alt="thumb" />
+               </div>
             </div>
           </div>
 
-          {/* COLUMNA 2: INFO Y VARIANTES (4 columnas de ancho) */}
-          <div className="lg:col-span-4 flex flex-col">
-            <h1 className="text-2xl lg:text-3xl font-black text-gray-900 leading-tight mb-3">
-              {actual.nombre}
+          {/* COLUMNA 2: TÍTULO Y VARIANTES */}
+          <div className="lg:col-span-4 flex flex-col pt-2">
+            <h1 className="text-2xl font-bold text-black leading-tight mb-2">
+              {producto.nombre}
             </h1>
             
-            {/* Estrellas y SKU */}
-            <div className="flex items-center gap-4 mb-6">
-              <div className="flex text-blue-500 text-sm">
-                <i className="fas fa-star"></i><i className="fas fa-star"></i><i className="fas fa-star"></i><i className="fas fa-star"></i><i className="fas fa-star"></i>
-              </div>
-              <span className="text-sm font-bold text-gray-500">SKU: <span className="text-blue-600">{actual.mi_sku}</span></span>
-              {/* Opción para mostrar también el de la competencia discretamente */}
-              <span className="text-xs text-gray-400 ml-2">(Ref OEM: {actual.sku_competencia})</span>
+            <div className="flex text-yellow-400 text-xs mb-4">
+              <i className="fas fa-star"></i><i className="fas fa-star"></i><i className="fas fa-star"></i><i className="fas fa-star"></i><i className="fas fa-star"></i>
+            </div>
+            
+            <div className="text-xs text-gray-500 mb-6">
+              Part Number <span className="font-bold text-black">{producto.mi_sku}</span>
             </div>
 
-            <div className="border-t border-gray-100 mb-6"></div>
-
-            {/* GRID DE VARIANTES */}
-            {variantes.length > 1 && (
-              <div>
-                <h3 className="font-bold text-gray-800 text-sm mb-3">Opciones Disponibles:</h3>
-                <div className="grid grid-cols-2 gap-2">
-                  {variantes.map((v, i) => {
-                    const isActive = actual.mi_sku === v.mi_sku; // Actualizado a mi_sku
-                    return (
-                      <button
-                        key={i}
-                        onClick={() => setVarianteActiva(v)}
-                        className={`p-3 border text-left flex flex-col transition-all duration-200 ${
-                          isActive 
-                            ? 'border-blue-600 shadow-[0_0_0_1px_rgba(37,99,235,1)] bg-blue-50/30' 
-                            : 'border-gray-200 bg-white hover:border-gray-400'
-                        }`}
-                      >
-                        <span className={`text-[11px] font-bold uppercase ${isActive ? 'text-blue-900' : 'text-gray-500'}`}>
-                          {v.tipo || `Opción ${i + 1}`}
-                        </span>
-                        <span className={`font-black mt-1 ${isActive ? 'text-blue-600' : 'text-gray-900'}`}>
-                          {v.precio}
-                        </span>
-                      </button>
-                    );
-                  })}
-                </div>
+            {todasLasOpciones.length > 0 && (
+              <div className="grid grid-cols-2 gap-y-4 gap-x-2">
+                {todasLasOpciones.map((v, i) => {
+                  const isActive = producto.mi_sku === v.mi_sku;
+                  return (
+                    <Link
+                      key={v.mi_sku}
+                      to={`/producto/${v.mi_sku}`} 
+                      className={`p-3 border-[3px] flex flex-col ${
+                        isActive 
+                          ? 'border-yellow-400 bg-white' 
+                          : 'border-transparent bg-white hover:border-gray-100'
+                      }`}
+                    >
+                      <span className="text-[11px] text-gray-700 mb-1 leading-tight">
+                        {v.tipo || `Option ${i + 1}`}
+                      </span>
+                      <span className="text-[11px] font-bold text-gray-900">
+                        ${Number(v.precio).toLocaleString('en-US', { minimumFractionDigits: 0 })}
+                      </span>
+                    </Link>
+                  );
+                })}
               </div>
             )}
           </div>
 
-          {/* COLUMNA 3: PRECIO Y CHECKOUT (3 columnas de ancho) */}
-          <div className="lg:col-span-3">
-            <div className="bg-gray-50/50 p-6 rounded-lg border border-gray-100">
-              
-              <div className="flex justify-between items-end mb-6">
-                <span className="text-sm font-bold text-gray-500">Price:</span>
-                <span className="text-4xl font-black text-blue-600">{actual.precio}</span>
-              </div>
-
-              <div className="flex justify-between items-center mb-4">
-                <span className="text-sm font-bold text-gray-800">Quantity:</span>
-                <div className="flex items-center border border-gray-300 rounded bg-white">
-                  <button onClick={() => manejarCambioCantidad(-1)} className="px-3 py-1 text-gray-500 hover:text-blue-600 transition">-</button>
-                  <span className="w-8 text-center font-bold text-sm">{cantidad}</span>
-                  <button onClick={() => manejarCambioCantidad(1)} className="px-3 py-1 text-gray-500 hover:text-blue-600 transition">+</button>
-                </div>
-              </div>
-              
-              <div className="text-right text-xs font-bold text-green-600 mb-6">
-                <i className="fas fa-check-circle mr-1"></i> In stock
-              </div>
-
-              <button 
-                onClick={() => agregarConCantidad(actual)}
-                className="w-full bg-blue-600 hover:bg-blue-800 text-white py-4 rounded font-black uppercase tracking-widest transition-colors mb-6 shadow-md shadow-blue-200 flex items-center justify-center gap-2"
-              >
-                <i className="fas fa-shopping-cart"></i> Add to Cart
-              </button>
-
-              {/* LISTA DE BENEFICIOS (Value Props) */}
-              <div className="space-y-4 text-xs">
-                <div className="flex items-start gap-3">
-                  <i className="fas fa-piggy-bank text-blue-600 mt-0.5 w-4 text-center"></i>
-                  <div>
-                    <strong className="block text-gray-900 uppercase">Up to 50% Savings</strong>
-                    <span className="text-gray-500">Quality compatibles save you money.</span>
-                  </div>
-                </div>
-                <div className="flex items-start gap-3">
-                  <i className="fas fa-shield-alt text-blue-600 mt-0.5 w-4 text-center"></i>
-                  <div>
-                    <strong className="block text-gray-900 uppercase">100% Guaranteed Compatible</strong>
-                    <span className="text-gray-500">Works like the OEM or your money back.</span>
-                  </div>
-                </div>
-                <div className="flex items-start gap-3">
-                  <i className="fas fa-truck-fast text-blue-600 mt-0.5 w-4 text-center"></i>
-                  <div>
-                    <strong className="block text-gray-900 uppercase">Expedited Shipping</strong>
-                    <span className="text-gray-500">Order now, ships when available.</span>
-                  </div>
-                </div>
-                <div className="flex items-start gap-3">
-                  <i className="fas fa-box-open text-blue-600 mt-0.5 w-4 text-center"></i>
-                  <div>
-                    <strong className="block text-gray-900 uppercase">Easy Returns</strong>
-                    <span className="text-gray-500">Hassle-free 30 day return policy.</span>
-                  </div>
-                </div>
-              </div>
-
+          {/* COLUMNA 3: PRECIO Y CHECKOUT */}
+          <div className="lg:col-span-3 pt-2">
+            <div className="flex justify-between items-start mb-6">
+              <span className="text-xs font-bold text-black mt-1">Price:</span>
+              <span className="text-2xl font-bold text-yellow-500">
+                ${Number(producto.precio).toLocaleString('en-US', { minimumFractionDigits: 0 })}
+              </span>
             </div>
+
+            {/* Selector de Cantidad Mejorado */}
+            <div className="flex justify-between items-center mb-4">
+              <span className="text-xs font-bold text-black mt-1">Quantity:</span>
+              <div className="flex items-center border border-gray-300 rounded overflow-hidden">
+                <button
+                  type="button"
+                  onClick={() => setCantidad(Math.max(1, cantidad - 1))}
+                  className="w-8 h-8 flex justify-center items-center bg-gray-50 hover:bg-gray-200 text-gray-800 font-bold transition-colors cursor-pointer"
+                >
+                  -
+                </button>
+                <input
+                  type="text"
+                  value={cantidad}
+                  onChange={(e) => {
+                    const val = e.target.value.replace(/[^0-9]/g, ''); 
+                    setCantidad(val === '' ? '' : Number(val));
+                  }}
+                  onBlur={() => {
+                    if (cantidad === '' || cantidad < 1) setCantidad(1);
+                  }}
+                  className="w-10 h-8 text-center text-xs font-bold outline-none border-x border-gray-300"
+                />
+                <button
+                  type="button"
+                  onClick={() => setCantidad((cantidad || 0) + 1)}
+                  className="w-8 h-8 flex justify-center items-center bg-gray-50 hover:bg-gray-200 text-gray-800 font-bold transition-colors cursor-pointer"
+                >
+                  +
+                </button>
+              </div>
+            </div>
+            
+            <div className="text-right text-[10px] text-gray-400 mb-6">
+              In stock
+            </div>
+
+            <button 
+              onClick={() => agregarAlCarrito({ ...producto, cantidad })}
+              className="w-full bg-[#8ced00] hover:bg-[#7bc800] text-white py-3 font-bold transition-colors mb-8 text-sm shadow-sm"
+            >
+              Add to Cart
+            </button>
+
+            <div className="space-y-6">
+              <div className="flex items-start gap-4">
+                <i className="fas fa-piggy-bank text-gray-300 text-xl w-6 text-center"></i>
+                <div>
+                  <strong className="block text-[11px] text-gray-600 uppercase tracking-wide">Up to 60% Savings</strong>
+                  <span className="text-[10px] text-gray-400 leading-tight block mt-1">Quality compatibles save you money</span>
+                </div>
+              </div>
+              <div className="flex items-start gap-4">
+                <i className="fas fa-link text-gray-300 text-xl w-6 text-center"></i>
+                <div>
+                  <strong className="block text-[11px] text-gray-600 uppercase tracking-wide">100% Guaranteed Compatible</strong>
+                  <span className="text-[10px] text-gray-400 leading-tight block mt-1">Works like the OEM or your money back</span>
+                </div>
+              </div>
+              <div className="flex items-start gap-4">
+                <i className="fas fa-truck text-gray-300 text-xl w-6 text-center"></i>
+                <div>
+                  <strong className="block text-[11px] text-gray-600 uppercase tracking-wide">Expedited Shipping</strong>
+                  <span className="text-[10px] text-gray-400 leading-tight block mt-1">Order now, ships when available</span>
+                </div>
+              </div>
+              <div className="flex items-start gap-4">
+                <i className="fas fa-box text-gray-300 text-xl w-6 text-center"></i>
+                <div>
+                  <strong className="block text-[11px] text-gray-600 uppercase tracking-wide">Easy Returns</strong>
+                  <span className="text-[10px] text-gray-400 leading-tight block mt-1">Hassle-free 30 day return policy</span>
+                </div>
+              </div>
+            </div>
+
           </div>
         </div>
 
-        {/* ================= PARTE INFERIOR: TABLAS TÉCNICAS ================= */}
-        <div className="border-t border-gray-200 pt-12">
+        {/* TABLAS INFERIORES */}
+        <div className="border-t border-gray-200 pt-10">
           
-          {/* TABLA: OEM CROSS REFERENCE */}
-          {oem.length > 0 && (
+          {producto.compatibility && Object.keys(producto.compatibility).length > 0 && (
             <div className="mb-12">
-              <h2 className="text-xl font-black text-gray-900 mb-6">OEM Part Number Cross References:</h2>
-              <div className="border-b-2 border-gray-800 pb-2 flex text-sm font-bold text-gray-800 mb-4">
-                <div className="w-1/3">Manufacturer</div>
-                <div className="w-2/3">OEM Part #</div>
-              </div>
-              <div className="flex flex-col">
-                {oem.map((item, i) => (
-                  <div key={i} className="flex text-sm py-4 border-b border-gray-100 hover:bg-gray-50 transition-colors">
-                    <div className="w-1/3 font-bold text-gray-700 pr-4">{item.clave}</div>
-                    <div className="w-2/3 text-gray-600">{item.valor}</div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* TABLA: COMPATIBILITY */}
-          {compat.length > 0 && (
-            <div className="mb-12">
-              <h2 className="text-xl font-black text-gray-900 mb-6">Compatibility:</h2>
-              <div className="border-b-2 border-gray-800 pb-2 flex text-sm font-bold text-gray-800 mb-4">
+              <h2 className="text-lg font-bold text-black mb-6">Compatibility:</h2>
+              <div className="border-b border-gray-300 pb-2 flex text-sm font-bold text-black mb-4">
                 <div className="w-1/3">Manufacturer</div>
                 <div className="w-2/3">Model</div>
               </div>
               <div className="flex flex-col">
-                {compat.map((item, i) => (
-                  <div key={i} className="flex text-sm py-4 border-b border-gray-100 hover:bg-gray-50 transition-colors">
-                    <div className="w-1/3 font-bold text-gray-700 pr-4">{item.clave}</div>
-                    <div className="w-2/3 text-gray-600 leading-relaxed">{item.valor}</div>
+                {Object.entries(producto.compatibility).map(([marca, modelos], i) => (
+                  <div key={i} className="flex text-sm py-3 border-b border-gray-100">
+                    <div className="w-1/3 font-bold text-gray-700 pr-4">{marca}</div>
+                    <div className="w-2/3 text-gray-600 leading-relaxed">{modelos}</div>
                   </div>
                 ))}
               </div>
             </div>
           )}
 
-          {/* TABLA: TECHNICAL SPECIFICATIONS */}
-          {specs.length > 0 && (
+          {producto.especificaciones && Object.keys(producto.especificaciones).length > 0 && (
             <div className="mb-12">
-              <h2 className="text-xl font-black text-gray-900 mb-6">Technical Specifications:</h2>
+              <h2 className="text-lg font-bold text-black mb-6">Technical Specifications:</h2>
               <div className="flex flex-col border-t border-gray-200 pt-2">
-                {specs.map((item, i) => (
-                  <div key={i} className="flex text-sm py-4 border-b border-gray-100 hover:bg-gray-50 transition-colors">
-                    <div className="w-1/3 font-bold text-gray-700 pr-4">{item.clave}</div>
-                    <div className="w-2/3 text-gray-600">{item.valor}</div>
+                {Object.entries(producto.especificaciones).map(([clave, valor], i) => (
+                  <div key={i} className="flex text-sm py-3 border-b border-gray-100">
+                    <div className="w-1/3 font-bold text-gray-700 pr-4">{clave}</div>
+                    <div className="w-2/3 text-gray-600">{valor}</div>
                   </div>
                 ))}
               </div>
@@ -305,6 +232,6 @@ function ProductoDetalle() {
       </div>
     </div>
   );
-}
+};
 
 export default ProductoDetalle;

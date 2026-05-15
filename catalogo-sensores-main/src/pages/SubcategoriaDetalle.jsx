@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { supabase } from '../supabaseClient';
+import { supabase } from '../SupabaseClient'; 
 import { useCartStore } from '../store';
 
 const ITEMS_POR_PAGINA = 30;
@@ -69,7 +69,7 @@ export default function SubcategoriaDetalle() {
 
         while (seguirBuscando) {
           const { data, error } = await supabase
-            .from('productos_medicos')
+            .from('productos_medicos_v2')
             .select('*')
             .eq('subcategoria', infoCategoriaActual.db)
             .range(rangoInicio, rangoInicio + cantidadPorLote - 1);
@@ -98,40 +98,39 @@ export default function SubcategoriaDetalle() {
     setPaginaActual(1);
   }, [subId]);
 
-  // ================= EXTRACCIÓN A PRUEBA DE BALAS =================
+  // ================= EXTRACCIÓN CON CONTADORES =================
   const filtrosDisponibles = useMemo(() => {
     const opciones = {};
     const ignorar = ["certifications", "warranty", "weight", "category", "latex-free", "sterile"];
 
     productosCrudos.forEach(prod => {
-      // Intentar sacar el Tipo
-      if (prod.tipo && typeof prod.tipo === 'string' && prod.tipo.trim() !== "") {
-        if (!opciones["Patient Connector"]) opciones["Patient Connector"] = new Set();
-        opciones["Patient Connector"].add(prod.tipo.trim());
+      // 1. Extraer Patient Connector de la columna 'tipo'
+      const patientConnector = prod.tipo?.trim();
+      if (patientConnector && patientConnector !== "") {
+        if (!opciones["Patient Connector"]) opciones["Patient Connector"] = {};
+        opciones["Patient Connector"][patientConnector] = (opciones["Patient Connector"][patientConnector] || 0) + 1;
       }
 
-      // Intentar sacar Especificaciones
-      if (prod.especificaciones && typeof prod.especificaciones === 'string') {
-        const specs = prod.especificaciones.split('|');
-        specs.forEach(s => {
-          if (s.includes(':')) {
-            const partes = s.split(':');
-            const clave = partes[0].trim();
-            const valor = partes.slice(1).join(':').trim(); 
+      // 2. Extraer especificaciones desde JSONB
+      if (prod.especificaciones && typeof prod.especificaciones === 'object') {
+        Object.entries(prod.especificaciones).forEach(([clave, valor]) => {
+          if (clave && valor && !ignorar.includes(clave.toLowerCase())) {
+            const nombreFiltro = clave === "Technology" ? "SpO2 Technology" : clave;
             
-            if (clave && valor && !ignorar.includes(clave.toLowerCase())) {
-              if (!opciones[clave]) opciones[clave] = new Set();
-              opciones[clave].add(valor);
-            }
+            if (!opciones[nombreFiltro]) opciones[nombreFiltro] = {};
+            opciones[nombreFiltro][valor] = (opciones[nombreFiltro][valor] || 0) + 1;
           }
         });
       }
     });
 
+    // Formatear y ordenar
     const resultadoFormateado = {};
     for (const key in opciones) {
-      if (opciones[key].size > 0) { // Si hay por lo menos 1, lo mostramos
-        resultadoFormateado[key] = Array.from(opciones[key]).sort();
+      if (Object.keys(opciones[key]).length > 0) { 
+        resultadoFormateado[key] = Object.entries(opciones[key])
+          .map(([nombre, cantidad]) => ({ nombre, cantidad }))
+          .sort((a, b) => a.nombre.localeCompare(b.nombre));
       }
     }
     return resultadoFormateado;
@@ -155,6 +154,7 @@ export default function SubcategoriaDetalle() {
     setPaginaActual(1);
   };
 
+  // ================= LÓGICA DE FILTRADO INTELIGENTE =================
   const productosFiltrados = useMemo(() => {
     if (Object.keys(filtrosSeleccionados).length === 0) return productosCrudos;
 
@@ -166,14 +166,9 @@ export default function SubcategoriaDetalle() {
 
         if (!prod.especificaciones) return false;
         
-        let valorDelProducto = null;
-        const specs = prod.especificaciones.split('|');
-        for (let s of specs) {
-          const partes = s.split(':');
-          if (partes.length >= 2 && partes[0].trim() === catFiltro) {
-            valorDelProducto = partes.slice(1).join(':').trim();
-            break;
-          }
+        let valorDelProducto = prod.especificaciones[catFiltro];
+        if (catFiltro === "SpO2 Technology" && !valorDelProducto) {
+           valorDelProducto = prod.especificaciones["Technology"];
         }
 
         return valoresSeleccionados.includes(valorDelProducto);
@@ -222,36 +217,38 @@ export default function SubcategoriaDetalle() {
       <div className="max-w-7xl mx-auto px-4 flex flex-col lg:flex-row gap-8">
         
         <aside className="w-full lg:w-1/4">
-          
-          {/* ================= CAJA BLANCA FORZADA (SIEMPRE VISIBLE) ================= */}
+          {/* NUEVO DISEÑO DE FILTROS */}
           <div className="bg-white p-6 rounded-xl border shadow-sm mb-6">
             <h2 className="text-lg font-black text-gray-800 mb-4 uppercase border-b pb-2">
               Advanced Filters
             </h2>
             
-            {/* Si no hay filtros, imprimimos esto para ver si leyó los productos */}
             {Object.keys(filtrosDisponibles).length === 0 ? (
               <div className="bg-red-50 text-red-600 p-4 rounded text-sm font-bold border border-red-200">
-                <i className="fas fa-exclamation-circle"></i> Error leyendo filtros.<br/>
-                Productos descargados: {productosCrudos.length}
+                <i className="fas fa-exclamation-circle"></i> No hay filtros disponibles.
               </div>
             ) : (
-              /* Si SÍ hay filtros, los mostramos */
               <>
                 {Object.entries(filtrosDisponibles).map(([categoriaFiltro, opciones]) => (
                   <div key={categoriaFiltro} className="mb-6">
-                    <h3 className="font-bold text-sm text-gray-800 mb-3">{categoriaFiltro}</h3>
-                    <div className="space-y-2 max-h-48 overflow-y-auto pr-2 custom-scrollbar">
+                    <h3 className="font-medium text-sm text-gray-900 mb-3">{categoriaFiltro}</h3>
+                    
+                    <div className="space-y-2 max-h-64 overflow-y-auto pr-2 custom-scrollbar">
                       {opciones.map(opcion => (
-                        <label key={opcion} className="flex items-start gap-3 cursor-pointer group">
-                          <input
-                            type="checkbox"
-                            className="mt-0.5 rounded border-gray-300 text-blue-600 focus:ring-blue-500 transition-colors"
-                            checked={(filtrosSeleccionados[categoriaFiltro] || []).includes(opcion)}
-                            onChange={() => manejarFiltro(categoriaFiltro, opcion)}
-                          />
-                          <span className="text-sm text-gray-600 group-hover:text-blue-600 transition-colors leading-tight">
-                            {opcion}
+                        <label key={opcion.nombre} className="flex items-center justify-between cursor-pointer group">
+                          <div className="flex items-center gap-3">
+                            <input
+                              type="checkbox"
+                              className="rounded border-gray-300 text-blue-600 focus:ring-blue-500 w-4 h-4 mt-0.5"
+                              checked={(filtrosSeleccionados[categoriaFiltro] || []).includes(opcion.nombre)}
+                              onChange={() => manejarFiltro(categoriaFiltro, opcion.nombre)}
+                            />
+                            <span className="text-[13px] text-gray-600 group-hover:text-black transition-colors leading-tight">
+                              {opcion.nombre}
+                            </span>
+                          </div>
+                          <span className="text-[11px] text-gray-400">
+                            {opcion.cantidad}
                           </span>
                         </label>
                       ))}
@@ -271,7 +268,6 @@ export default function SubcategoriaDetalle() {
             )}
           </div>
 
-          {/* Menú normal de subcategorías */}
           <div className="bg-white p-6 rounded-xl border shadow-sm sticky top-24">
             <h2 className="text-lg font-black text-gray-800 mb-4 uppercase border-b pb-2">
               Categories
@@ -298,9 +294,7 @@ export default function SubcategoriaDetalle() {
           </div>
         </aside>
 
-        {/* ================= CONTENIDO PRINCIPAL ================= */}
         <main className="w-full lg:w-3/4">
-          
           <div className="mb-8">
             <h1 className="text-4xl font-bold mb-2 capitalize text-gray-800">
               {infoCategoriaActual.title}
@@ -320,7 +314,6 @@ export default function SubcategoriaDetalle() {
             </div>
           ) : (
             <>
-              {/* Grid de Productos */}
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                 {productosPagina.map((producto) => (
                   <div key={producto.mi_sku} className="bg-white border rounded-xl overflow-hidden hover:shadow-lg transition-all flex flex-col">
@@ -334,7 +327,10 @@ export default function SubcategoriaDetalle() {
                         </h3>
                       </Link>
                       <p className="text-xs text-blue-600 font-bold bg-blue-50 inline-block px-2 py-1 rounded">SKU: {producto.mi_sku}</p>
-                      <p className="text-xl font-bold text-gray-900 mt-3">{producto.precio}</p>
+                      
+                      <p className="text-xl font-bold text-gray-900 mt-3">
+                        ${Number(producto.precio).toLocaleString('es-MX', { minimumFractionDigits: 2 })}
+                      </p>
                     </div>
                     <div className="p-4 pt-0">
                       <button 
@@ -348,7 +344,6 @@ export default function SubcategoriaDetalle() {
                 ))}
               </div>
 
-              {/* Paginación */}
               {totalPaginas > 1 && (
                 <div className="flex justify-center items-center gap-2 mt-16 flex-wrap">
                   <button onClick={() => cambiarPagina(paginaActual - 1)} disabled={paginaActual === 1} className="px-4 py-2 border rounded-lg font-bold text-gray-700 hover:bg-gray-100">Anterior</button>
