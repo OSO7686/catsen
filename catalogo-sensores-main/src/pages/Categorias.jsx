@@ -93,8 +93,9 @@ function Categorias() {
     <div className="min-h-screen bg-white py-12">
       <div className="max-w-7xl mx-auto px-4 flex flex-col lg:flex-row gap-8">
         
-        {/* BARRA LATERAL - DISEÑO CLÁSICO AZUL (Fluido y expandible hacia abajo) */}
-        <aside className="w-full lg:w-1/4 h-fit sticky top-24">
+        {/* BARRA LATERAL - DISEÑO CLÁSICO AZUL (Ahora crece libremente hacia abajo) */}
+        {/* Nota: Se quitó el "sticky" para que si el menú es gigante, puedas scrollear toda la página y verlo completo */}
+        <aside className="w-full lg:w-1/4 h-fit">
           <div className="bg-white rounded-2xl shadow-sm border border-gray-100 flex flex-col">
             
             {/* Encabezado azul clásico */}
@@ -124,7 +125,7 @@ function Categorias() {
                     </button>
 
                     {estaActiva && (
-                      <ul className="mt-1 ml-9 space-y-1 border-l-2 border-blue-100 pl-2 py-2">
+                      <ul className="mt-1 ml-9 space-y-1 border-l-2 border-blue-100 pl-2 py-2 h-auto">
                         {/* Opción base: Ver todo el catálogo de esta categoría principal */}
                         <li>
                           <button
@@ -137,7 +138,7 @@ function Categorias() {
                           </button>
                         </li>
                         
-                        {/* 🔗 SOLUCIÓN AL FALSO POSITIVO: Mapeo de subcategorías usando componentes <Link> */}
+                        {/* Mapeo de subcategorías libres de restricciones de altura */}
                         {subsDeEsteMenu.map(sub => (
                           <li key={sub.db}>
                             <Link
@@ -213,7 +214,6 @@ function Categorias() {
                         </Link>
                         <div className="flex items-center justify-between mt-auto pt-4 border-t border-gray-50">
                           
-                          {/* Formateador seguro para evitar fallos visuales de NaN */}
                           <span className="text-2xl font-black text-blue-900">
                             {formatearPrecio(producto.precio)}
                           </span>

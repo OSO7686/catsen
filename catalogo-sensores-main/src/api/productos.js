@@ -1,6 +1,6 @@
 import { supabase } from './supabase';
 
-// 1. Esta es la función que usa Categorias.jsx (busca por categoría principal)
+// 1. Función para Categorias Principales (Ver Todo) - USA .ilike Y APUNTA A v2
 export const obtenerProductosCategoria = async (categoriaPrincipal) => {
   let todosLosProductos = [];
   let rangoInicio = 0;
@@ -9,9 +9,9 @@ export const obtenerProductosCategoria = async (categoriaPrincipal) => {
 
   while (seguirBuscando) {
     const { data, error } = await supabase
-      .from('productos_medicos')
+      .from('productos_medicos_v2') // ✅ Apunta a la tabla nueva
       .select('*')
-      .eq('categoria', categoriaPrincipal)
+      .ilike('categoria', categoriaPrincipal) // ✅ ignora mayúsculas/minúsculas
       .range(rangoInicio, rangoInicio + cantidadPorLote - 1);
 
     if (error) throw error;
@@ -28,7 +28,7 @@ export const obtenerProductosCategoria = async (categoriaPrincipal) => {
   return todosLosProductos;
 };
 
-// 2. Esta es la función que usa SubcategoriaDetalle.jsx (busca por subcategoría específica en v2)
+// 2. Función para Subcategorías Específicas - APUNTA A v2 Y BUSCA POR SUBCATEGORÍA
 export const obtenerProductosPorSubcategoria = async (subcategoriaDb) => {
   let todosLosProductos = [];
   let rangoInicio = 0;
@@ -36,12 +36,13 @@ export const obtenerProductosPorSubcategoria = async (subcategoriaDb) => {
   let seguirBuscando = true;
 
   while (seguirBuscando) {
-    // Asegúrate de que apunte a _v2 y que el .eq() filtre por la columna 'categoria'
     const { data, error } = await supabase
-       .from('productos_medicos_v2') 
+       .from('productos_medicos_v2') // ✅ Apunta a la tabla nueva
        .select('*')
-       .eq('categoria', nombreDeLaCategoria);
-       if (error) throw error;
+       .eq('subcategoria', subcategoriaDb) // ✅ Filtra por la subcategoría correcta
+       .range(rangoInicio, rangoInicio + cantidadPorLote - 1);
+       
+    if (error) throw error;
 
     todosLosProductos = [...todosLosProductos, ...data];
 

@@ -82,7 +82,7 @@ export default function SubcategoriaDetalle() {
     return (
       <div className="min-h-screen bg-white py-20 flex flex-col justify-center items-center gap-4">
         <i className="fas fa-spinner fa-spin text-4xl text-blue-600"></i>
-        <p className="text-xl text-gray-500 font-bold animate-pulse">Cargando catálogo...</p>
+        <p className="text-xl text-gray-500 font-bold animate-pulse">Loading catalog...</p>
       </div>
     );
   }
@@ -91,13 +91,13 @@ export default function SubcategoriaDetalle() {
     <div className="min-h-screen bg-white py-12">
       <div className="max-w-7xl mx-auto px-4 flex flex-col lg:flex-row gap-8">
         
-        {/* BARRA LATERAL IDENTICA A LA DE CATEGORIAS GENERALES */}
-        <aside className="w-full lg:w-1/4 h-fit sticky top-24 flex flex-col gap-6">
+        {/* BARRA LATERAL (Fluida y libre de scrolls o comportamiento sticky trabado) */}
+        <aside className="w-full lg:w-1/4 h-fit flex flex-col gap-6">
           
           {/* 1. NAVEGACIÓN ORIGINAL DE CATÁLOGO */}
           <div className="bg-white rounded-2xl shadow-sm border border-gray-100 flex flex-col">
             <div className="bg-blue-900 p-4 shrink-0 rounded-t-2xl">
-              <h3 className="text-white font-black text-xs uppercase tracking-[0.2em]">Navegación de Catálogo</h3>
+              <h3 className="text-white font-black text-xs uppercase tracking-[0.2em]">Catalog Navigation</h3>
             </div>
             
             <nav className="p-3">
@@ -121,13 +121,13 @@ export default function SubcategoriaDetalle() {
                     </button>
 
                     {estaActiva && (
-                      <ul className="mt-1 ml-9 space-y-1 border-l-2 border-blue-100 pl-2 py-2">
+                      <ul className="mt-1 ml-9 space-y-1 border-l-2 border-blue-100 pl-2 py-2 h-auto">
                         <li>
                           <Link
                             to={`/categorias?tipo=${cat.nombre}`}
                             className="w-full block text-left px-3 py-1.5 rounded-lg text-xs font-bold text-gray-400 hover:text-blue-600 hover:bg-blue-50/50 transition-colors"
                           >
-                            • Ver Todo {cat.nombre}
+                            • View All {cat.nombre}
                           </Link>
                         </li>
                         
@@ -154,10 +154,10 @@ export default function SubcategoriaDetalle() {
             </nav>
           </div>
 
-          {/* 2. CARD DE FILTROS AVANZADOS */}
+          {/* 2. CARD DE FILTROS AVANZADOS (Desplegado completo sin scroll interno) */}
           <div className="bg-white rounded-2xl shadow-sm border border-gray-100 flex flex-col">
             <div className="bg-blue-900 p-4 shrink-0 rounded-t-2xl">
-              <h3 className="text-white font-black text-xs uppercase tracking-[0.2em]">Filtros Avanzados</h3>
+              <h3 className="text-white font-black text-xs uppercase tracking-[0.2em]">Advanced Filters</h3>
             </div>
             
             <div className="p-4 flex flex-col gap-6">
@@ -173,7 +173,7 @@ export default function SubcategoriaDetalle() {
                       <h4 className="font-bold text-xs text-blue-900 uppercase tracking-wider mb-3">
                         {categoriaFiltro}
                       </h4>
-                      <div className="space-y-2 max-h-52 overflow-y-auto pr-1 custom-scrollbar">
+                      <div className="space-y-2 h-auto">
                         {opciones.map(opcion => {
                           const isChecked = (filtrosSeleccionados[categoriaFiltro] || []).includes(opcion.nombre);
                           return (
@@ -204,7 +204,7 @@ export default function SubcategoriaDetalle() {
                       onClick={limpiarFiltros}
                       className="w-full mt-2 text-[11px] font-black text-red-500 hover:text-red-700 uppercase tracking-widest text-center border border-red-100 py-2 rounded-xl hover:bg-red-50 transition-colors"
                     >
-                      Limpiar Filtros
+                      Clean Filters
                     </button>
                   )}
                 </div>
@@ -218,7 +218,7 @@ export default function SubcategoriaDetalle() {
           <div className="mb-8 flex flex-col sm:flex-row sm:items-end justify-between gap-4">
             <div>
               <nav className="flex text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-2 gap-2">
-                <Link to="/" className="hover:text-blue-600">Inicio</Link>
+                <Link to="/" className="hover:text-blue-600">Home</Link>
                 <span>/</span>
                 <Link to={`/categorias?tipo=${infoCategoriaActual.main}`} className="hover:text-blue-600 uppercase">{infoCategoriaActual.main || 'Catálogo'}</Link>
                 <span>/</span>
@@ -230,7 +230,7 @@ export default function SubcategoriaDetalle() {
               </h1>
             </div>
             <p className="text-gray-400 font-bold text-sm bg-gray-100 px-4 py-2 rounded-full h-fit">
-              {totalProductos} Productos
+              {totalProductos} Products
             </p>
           </div>
 
