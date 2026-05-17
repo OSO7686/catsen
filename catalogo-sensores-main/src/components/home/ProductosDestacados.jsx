@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
-import { useCartStore } from '../store';
+import { useCartStore } from '../../store/cartStore';
 import { Link } from 'react-router-dom';
-import { supabase } from '../supabaseClient';
+import { supabase } from '../../api/supabase';
 
 function ProductosDestacados() {
   const [prodActive, setProdActive] = useState(0);

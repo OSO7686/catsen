@@ -1,13 +1,13 @@
 import { useState, useEffect } from 'react';
 import { useSearchParams, Link } from 'react-router-dom';
-import { useCartStore } from '../store';
-import { supabase } from '../supabaseClient'; 
+import { useCartStore } from '../store/cartStore';
+import { supabase } from '../api/supabase'; 
 
 export default function Busqueda() {
   const [searchParams] = useSearchParams();
   const query = searchParams.get('q') || ''; 
   const agregarAlCarrito = useCartStore((state) => state.agregarAlCarrito);
-  
+   
   const [productosFiltrados, setProductosFiltrados] = useState([]);
   const [cargando, setCargando] = useState(false); // Inicia en false
   const [paginaActual, setPaginaActual] = useState(1);

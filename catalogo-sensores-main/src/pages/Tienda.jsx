@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 // Asegúrate de que la ruta a tu cliente de Supabase sea correcta
-import { supabase } from '../supabaseClient'; 
+import { supabase } from '../api/supabase'; 
 
 export default function Tienda() {
   const [accesorios, setAccesorios] = useState([]);

@@ -1,6 +1,6 @@
 // src/hooks/useProducto.js
 import { useState, useEffect } from 'react';
-import { supabase } from '../SupabaseClient';
+import { supabase } from '../api/supabase';
 
 export const useProducto = (sku) => {
   const [producto, setProducto] = useState(null);

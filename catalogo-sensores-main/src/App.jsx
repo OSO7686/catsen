@@ -1,8 +1,12 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
-import BotonWhatsapp from './components/BotonWhatsapp';
-import Header from './components/Header';
-import Footer from './components/Footer';
-import ScrollToTop from './components/ScrollToTop'; 
+
+// 📂 RUTAS ACTUALIZADAS (Apuntan a las nuevas subcarpetas que creamos)
+import BotonWhatsapp from './components/common/BotonWhatsapp';
+import Header from './components/layout/Header';
+import Footer from './components/layout/Footer';
+import ScrollToTop from './components/layout/ScrollToTop'; 
+
+// 📄 PÁGINAS (Estas se quedan igual porque la carpeta pages no cambió)
 import Home from './pages/Home';
 import Nosotros from './pages/Nosotros';
 import Tienda from './pages/Tienda';
