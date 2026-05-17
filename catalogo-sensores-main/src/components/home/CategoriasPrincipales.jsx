@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
 
-// Lista de tus categorías reales (las mismas que en tu Header)
+// list of the real categories (the same as in your Header)
 const categorias = [
   { nombre: 'SpO2', icon: 'fas fa-fingerprint' },
   { nombre: 'ECG Cables', icon: 'fas fa-wave-square' },

@@ -36,13 +36,12 @@ export const obtenerProductosPorSubcategoria = async (subcategoriaDb) => {
   let seguirBuscando = true;
 
   while (seguirBuscando) {
+    // Asegúrate de que apunte a _v2 y que el .eq() filtre por la columna 'categoria'
     const { data, error } = await supabase
-      .from('productos_medicos_v2')
-      .select('*')
-      .eq('subcategoria', subcategoriaDb)
-      .range(rangoInicio, rangoInicio + cantidadPorLote - 1);
-
-    if (error) throw error;
+       .from('productos_medicos_v2') 
+       .select('*')
+       .eq('categoria', nombreDeLaCategoria);
+       if (error) throw error;
 
     todosLosProductos = [...todosLosProductos, ...data];
 

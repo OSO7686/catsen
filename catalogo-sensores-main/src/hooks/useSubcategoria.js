@@ -6,6 +6,7 @@ export const useSubcategoria = (subcategoriaDb) => {
   const [cargando, setCargando] = useState(true);
   const [filtrosSeleccionados, setFiltrosSeleccionados] = useState({});
 
+  // 1. Descargamos el catálogo en bruto
   useEffect(() => {
     async function obtenerDatos() {
       setCargando(true);
@@ -22,49 +23,61 @@ export const useSubcategoria = (subcategoriaDb) => {
     if (subcategoriaDb) obtenerDatos();
   }, [subcategoriaDb]);
 
-  // 🧠 EXTRACCIÓN DINÁMICA DE FILTROS
+  // 2. Extracción dinámica: Convertimos el JSON y armamos la lista de filtros
   const filtrosDisponibles = useMemo(() => {
     const opciones = {};
     
-    // Aquí ponemos lo que NO queremos que sea un filtro visual
-    const ignorar = ["certifications", "warranty", "weight", "category", "latex-free", "sterile", "packaging type", "packaging unit", "lead cable diameter", "lead cable material", "trunk cable material"];
+    // Filtramos ruido: Especificaciones que son útiles pero no sirven como filtros visuales
+    const ignorar = [
+      "certifications", "warranty", "weight", "category", 
+      "latex-free", "sterile", "packaging type", "packaging unit", 
+      "lead cable diameter", "lead cable material", "trunk cable material",
+      "cable color", "cable diameter"
+    ];
 
     productosCrudos.forEach(prod => {
-      // 1. Extraer Patient Connector (Si viene en la columna 'tipo')
+      let specs = prod.especificaciones;
+      
+      // 🛡️ ESCUDO: Desempaquetamos la señal si Supabase la envía como texto
+      if (typeof specs === 'string') {
+        try {
+          specs = JSON.parse(specs);
+        } catch (e) {
+          specs = null; // Si el dato viene corrupto, lo descartamos
+        }
+      }
+
+      // 1. Rescatamos el Conector de Paciente si viene guardado en la columna 'tipo'
       const patientConnector = prod.tipo?.trim();
       if (patientConnector && patientConnector !== "") {
         if (!opciones["Patient Connector"]) opciones["Patient Connector"] = {};
         opciones["Patient Connector"][patientConnector] = (opciones["Patient Connector"][patientConnector] || 0) + 1;
       }
 
-      // 2. Extraer especificaciones del JSON
-      let specs = prod.especificaciones;
-      
-      // 🛡️ ESCUDO: Si Supabase lo manda como texto, lo convertimos a Objeto JSON
-      if (typeof specs === 'string') {
-        try {
-          specs = JSON.parse(specs);
-        } catch (e) {
-          specs = null; // Si no es un JSON válido, lo ignoramos
-        }
-      }
-
-      // Si tenemos un objeto válido, extraemos sus llaves
+      // 2. Extraemos el resto de variables del objeto JSON ya limpio
       if (specs && typeof specs === 'object') {
         Object.entries(specs).forEach(([clave, valor]) => {
-          // Solo procesamos si no está en la lista de ignorados
-          if (clave && valor && !ignorar.includes(clave.toLowerCase())) {
-            // Renombramos "Technology" a algo más claro si es necesario
-            const nombreFiltro = clave === "Technology" ? "SpO2 Technology" : clave;
+          const claveLimpia = clave.trim();
+          const valorLimpio = String(valor).trim();
+
+          // Solo procesamos si no está en la lista negra
+          if (claveLimpia && valorLimpio && !ignorar.includes(claveLimpia.toLowerCase())) {
             
+            // Renombramos "Technology" a "SpO2 Technology" para igualar a la competencia
+            let nombreFiltro = claveLimpia;
+            if (claveLimpia.toLowerCase() === "technology") nombreFiltro = "SpO2 Technology";
+            
+            // Evitamos duplicar "Patient Connector" si ya lo sacamos de la columna 'tipo'
+            if (nombreFiltro === "Patient Connector" && patientConnector === valorLimpio) return;
+
             if (!opciones[nombreFiltro]) opciones[nombreFiltro] = {};
-            opciones[nombreFiltro][valor] = (opciones[nombreFiltro][valor] || 0) + 1;
+            opciones[nombreFiltro][valorLimpio] = (opciones[nombreFiltro][valorLimpio] || 0) + 1;
           }
         });
       }
     });
 
-    // Formatear el resultado para que la interfaz lo pueda leer fácilmente
+    // Formateamos y ordenamos el bloque alfabéticamente para que se vea estético
     const resultadoFormateado = {};
     for (const key in opciones) {
       if (Object.keys(opciones[key]).length > 0) { 
@@ -76,7 +89,7 @@ export const useSubcategoria = (subcategoriaDb) => {
     return resultadoFormateado;
   }, [productosCrudos]);
 
-  // 🕹️ LÓGICA DE SELECCIÓN DE CHECKBOXES
+  // 3. Controladores de la interfaz (Checkboxes)
   const manejarFiltro = (categoriaFiltro, valor) => {
     setFiltrosSeleccionados(prev => {
       const seleccionadosActuales = prev[categoriaFiltro] || [];
@@ -96,33 +109,35 @@ export const useSubcategoria = (subcategoriaDb) => {
 
   const limpiarFiltros = () => setFiltrosSeleccionados({});
 
-  // ⚙️ APLICACIÓN DE FILTROS A LOS PRODUCTOS
+  // 4. Lógica de Filtrado: Oculta los productos que no coinciden con la selección
   const productosFiltrados = useMemo(() => {
     if (Object.keys(filtrosSeleccionados).length === 0) return productosCrudos;
 
     return productosCrudos.filter(prod => {
       return Object.entries(filtrosSeleccionados).every(([catFiltro, valoresSeleccionados]) => {
         
-        if (catFiltro === "Patient Connector") {
-          return valoresSeleccionados.includes(prod.tipo?.trim());
-        }
-
-        // Parsear de nuevo para leer y filtrar
         let specs = prod.especificaciones;
         if (typeof specs === 'string') {
           try { specs = JSON.parse(specs); } catch(e) { specs = null; }
         }
 
-        if (!specs) return false;
-        
-        let valorDelProducto = specs[catFiltro];
-        
-        // Manejo especial si renombramos la categoría
-        if (catFiltro === "SpO2 Technology" && !valorDelProducto) {
-           valorDelProducto = specs["Technology"];
+        let valorDelProducto = null;
+
+        if (specs && typeof specs === 'object') {
+          valorDelProducto = specs[catFiltro];
+          
+          if (catFiltro === "SpO2 Technology" && !valorDelProducto) {
+            valorDelProducto = specs["Technology"];
+          }
         }
 
-        return valoresSeleccionados.includes(valorDelProducto);
+        if (!valorDelProducto && catFiltro === "Patient Connector") {
+          valorDelProducto = prod.tipo;
+        }
+
+        if (!valorDelProducto) return false;
+
+        return valoresSeleccionados.includes(String(valorDelProducto).trim());
       });
     });
   }, [productosCrudos, filtrosSeleccionados]);

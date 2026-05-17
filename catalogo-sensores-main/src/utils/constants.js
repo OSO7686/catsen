@@ -10,40 +10,55 @@ export const mainCategories = [
 ];
 
 export const MAPA_SUBCATEGORIAS = [
-  { db: "spo2_direct_connect_sensors", url: "direct-connect-spo2-sensors", title: "Direct-Connect SpO2 Sensors", main: "spo2" },
-  { db: "spo2_short_sensors", url: "short-spo2-sensors", title: "Short SpO2 Sensors", main: "spo2" },
-  { db: "spo2_adapter_cables", url: "spo2-adapter-cables", title: "SpO2 Adapter Cables", main: "spo2" },
-  { db: "spo2_disposable_sensors", url: "disposable-sp02-sensors", title: "Disposable Sp02 Sensors", main: "spo2" },
-  { db: "spo2_accessories", url: "spo2-accessories", title: "SpO2 Accessories", main: "spo2" },
-  { db: "ecg_direct_connect_cables", url: "direct-connect-ecg-cables", title: "Direct-Connect ECG Cables", main: "ecg" },
-  { db: "ecg_leadwires", url: "ecg-leadwires", title: "ECG Leadwires", main: "ecg" },
-  { db: "ecg_telemetry_leadwires", url: "ecg-telemetry", title: "ECG Telemetry", main: "ecg" },
-  { db: "ecg_trunk_cables", url: "ecg-trunk-cables", title: "ECG Trunk Cables", main: "ecg" },
-  { db: "ecg_disposable_direct_connect_ecg_cables", url: "disposable-direct-connect-ecg-cables", title: "Disposable Direct-Connect ECG Cables", main: "ecg" },
-  { db: "ecg_disposable_electrodes", url: "disposable-ecg-electrodes", title: "Disposable ECG Electrodes", main: "ecg" },
-  { db: "ecg_disposable_leadwires", url: "disposable-ecg-leadwires", title: "Disposable ECG Leadwires", main: "ecg" },
-  { db: "ecg_accessories", url: "ecg-accessories", title: "ECG Accessories", main: "ecg" },
-  { db: "ekg_direct_connect_cables", url: "direct-connect-ekg-cables", title: "Direct-Connect EKG Cables", main: "ekg" },
-  { db: "ekg_leadwires", url: "ekg-leadwires", title: "EKG Leadwires", main: "ekg" },
-  { db: "ekg_trunk_cables", url: "ekg-trunk-cables", title: "EKG Trunk Cables", main: "ekg" },
-  { db: "ekg_accessories", url: "ekg-accessories", title: "EKG Accessories", main: "ekg" },
-  { db: "nibp_cuffs", url: "nibp-cuffs", title: "NIBP Cuffs", main: "nibp" }, 
-  { db: "nibp_hoses", url: "nibp-hoses", title: "NIBP Hoses", main: "nibp" },
-  { db: "nibp_connectors", url: "nibp-connectors", title: "NIBP Connectors", main: "nibp" },
-  { db: "nibp_disposable_cuffs", url: "disposable-nibp-cuffs", title: "Disposable NIBP Cuffs", main: "nibp" },
-  { db: "ibp_adapter_cables", url: "ibp-adapter-cables", title: "IBP Adapter Cables", main: "ibp" },
-  { db: "ibp_disposable_transducers", url: "ibp-disposable-transducers", title: "IBP Disposable Transducers", main: "ibp" },
-  { db: "ibp_infusion_bags", url: "ibp-infusion-bags", title: "IBP Infusion Bags", main: "ibp" },
-  { db: "temperature_reusable_probes", url: "reusable-temperature-probes", title: "Reusable Temperature Probes", main: "temperature" },
-  { db: "temperature_disposable_probes", url: "disposable-temperature-probes", title: "Disposable Temperature Probes", main: "temperature" },
-  { db: "temperature_adapters", url: "temperature-adapters", title: "Temperature Adapters", main: "temperature" },
-  { db: "temperature_accessories", url: "temperature-accessories", title: "Temperature Accessories", main: "temperature" },
-  { db: "fetal_ultrasound_transducers", url: "ultrasound-transducers", title: "Ultrasound Transducers", main: "fetal" },
-  { db: "fetal_toco_transducers", url: "toco-transducers", title: "Toco Transducers", main: "fetal" },
-  { db: "fetal_transducers_repair_cables", url: "transducers-repair-cables", title: "Transducers Repair Cables", main: "fetal" },
-  { db: "fetal_transducers_repair_cases", url: "transducers-repair-cases", title: "Transducers Repair Cases", main: "fetal" },
-  { db: "fetal_fse_cables", url: "fse-cables", title: "FSE Cables", main: "fetal" },
-  { db: "fetal_accessories", url: "fetal-accessories", title: "Fetal Accessories", main: "fetal" },
+  // SpO2
+  { db: "spo2_direct_connect_sensors", url: "direct-connect-spo2-sensors", title: "Direct-Connect SpO2 Sensors", main: "SpO2" },
+  { db: "spo2_short_sensors", url: "short-spo2-sensors", title: "Short SpO2 Sensors", main: "SpO2" },
+  { db: "spo2_adapter_cables", url: "spo2-adapter-cables", title: "SpO2 Adapter Cables", main: "SpO2" },
+  { db: "spo2_disposable_sensors", url: "disposable-spo2-sensors", title: "Disposable SpO2 Sensors", main: "SpO2" },
+  { db: "spo2_accessories", url: "spo2-accessories", title: "SpO2 Accessories", main: "SpO2" },
+  
+  // ECG
+  { db: "ecg_direct_connect_cables", url: "direct-connect-ecg-cables", title: "Direct-Connect ECG Cables", main: "ECG" },
+  { db: "ecg_leadwires", url: "ecg-leadwires", title: "ECG Leadwires", main: "ECG" },
+  { db: "ecg_telemetry_leadwires", url: "ecg-telemetry", title: "ECG Telemetry", main: "ECG" },
+  { db: "ecg_trunk_cables", url: "ecg-trunk-cables", title: "ECG Trunk Cables", main: "ECG" },
+  { db: "ecg_disposable_direct_connect_cables", url: "disposable-direct-connect-ecg-cables", title: "Disposable Direct-Connect ECG Cables", main: "ECG" },
+  { db: "ecg_disposable_electrodes", url: "disposable-ecg-electrodes", title: "Disposable ECG Electrodes", main: "ECG" },
+  { db: "ecg_disposable_leadwires", url: "disposable-ecg-leadwires", title: "Disposable ECG Leadwires", main: "ECG" },
+  { db: "ecg_accessories", url: "ecg-accessories", title: "ECG Accessories", main: "ECG" },
+  
+  // EKG
+  { db: "ekg_direct_connect_cables", url: "direct-connect-ekg-cables", title: "Direct-Connect EKG Cables", main: "EKG" },
+  { db: "ekg_leadwires", url: "ekg-leadwires", title: "EKG Leadwires", main: "EKG" },
+  { db: "ekg_trunk_cables", url: "ekg-trunk-cables", title: "EKG Trunk Cables", main: "EKG" },
+  { db: "ekg_accessories", url: "ekg-accessories", title: "EKG Accessories", main: "EKG" },
+  
+  // NIBP
+  { db: "nibp_cuffs", url: "nibp-cuffs", title: "NIBP Cuffs", main: "NIBP" }, 
+  { db: "nibp_hoses", url: "nibp-hoses", title: "NIBP Hoses", main: "NIBP" },
+  { db: "nibp_connectors", url: "nibp-connectors", title: "NIBP Connectors", main: "NIBP" },
+  { db: "nibp_disposable_cuffs", url: "disposable-nibp-cuffs", title: "Disposable NIBP Cuffs", main: "NIBP" },
+  
+  // IBP
+  { db: "ibp_adapter_cables", url: "ibp-adapter-cables", title: "IBP Adapter Cables", main: "IBP" },
+  { db: "ibp_disposable_transducers", url: "ibp-disposable-transducers", title: "IBP Disposable Transducers", main: "IBP" },
+  { db: "ibp_infusion_bags", url: "ibp-infusion-bags", title: "IBP Infusion Bags", main: "IBP" },
+  
+  // Temperature
+  { db: "temperature_reusable_probes", url: "reusable-temperature-probes", title: "Reusable Temperature Probes", main: "Temperature" },
+  { db: "temperature_disposable_probes", url: "disposable-temperature-probes", title: "Disposable Temperature Probes", main: "Temperature" },
+  { db: "temperature_adapters", url: "temperature-adapters", title: "Temperature Adapters", main: "Temperature" },
+  { db: "temperature_accessories", url: "temperature-accessories", title: "Temperature Accessories", main: "Temperature" },
+  
+  // Fetal
+  { db: "fetal_ultrasound_transducers", url: "ultrasound-transducers", title: "Ultrasound Transducers", main: "Fetal" },
+  { db: "fetal_toco_transducers", url: "toco-transducers", title: "Toco Transducers", main: "Fetal" },
+  { db: "fetal_transducers_repair_cables", url: "transducers-repair-cables", title: "Transducers Repair Cables", main: "Fetal" },
+  { db: "fetal_transducers_repair_cases", url: "transducers-repair-cases", title: "Transducers Repair Cases", main: "Fetal" },
+  { db: "fetal_fse_cables", url: "fse-cables", title: "FSE Cables", main: "Fetal" },
+  { db: "fetal_accessories", url: "fetal-accessories", title: "Fetal Accessories", main: "Fetal" }, // Corregido el espacio extra
+  
+  // Oxygen Sensors
   { db: "o2_sensors", url: "oxygen-sensors", title: "Oxygen Sensors", main: "Oxygen Sensors" },
   { db: "o2_flow_sensors", url: "flow-sensors", title: "Flow Sensors", main: "Oxygen Sensors" },
   { db: "o2_etco2_sensors", url: "etco2-sensors", title: "EtCO2 Sensors", main: "Oxygen Sensors" }
