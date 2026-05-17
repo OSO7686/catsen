@@ -143,7 +143,7 @@ function Header() {
                     </p>
                   </div>
                   <button 
-                    onClick={() => eliminarDelCarrito(index)}
+                    onClick={() => eliminarDelCarrito(producto.mi_sku)}
                     className="absolute right-0 text-gray-300 hover:text-red-500 transition-colors cursor-pointer"
                     title="Eliminar producto"
                   >

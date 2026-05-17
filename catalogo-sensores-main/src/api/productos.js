@@ -1,57 +1,36 @@
 import { supabase } from './supabase';
 
-// 1. Función para Categorias Principales (Ver Todo) - USA .ilike Y APUNTA A v2
-export const obtenerProductosCategoria = async (categoriaPrincipal) => {
-  let todosLosProductos = [];
-  let rangoInicio = 0;
-  let cantidadPorLote = 1000;
-  let seguirBuscando = true;
+// 1. Función para Categorias Principales - PAGINACIÓN DESDE SUPABASE
+export const obtenerProductosCategoria = async (categoriaPrincipal, pagina = 1, limite = 30) => {
+  // Calculamos en qué fila empezar y terminar (Ej: Pagina 1 = 0 a 29)
+  const from = (pagina - 1) * limite;
+  const to = from + limite - 1;
 
-  while (seguirBuscando) {
-    const { data, error } = await supabase
-      .from('productos_medicos_v2') // ✅ Apunta a la tabla nueva
-      .select('*')
-      .ilike('categoria', categoriaPrincipal) // ✅ ignora mayúsculas/minúsculas
-      .range(rangoInicio, rangoInicio + cantidadPorLote - 1);
+  // Pedimos la data y agregamos { count: 'exact' } para saber el total real en la base de datos
+  const { data, error, count } = await supabase
+    .from('productos_medicos_v2')
+    .select('*', { count: 'exact' })
+    .ilike('categoria', categoriaPrincipal)
+    .range(from, to);
 
-    if (error) throw error;
+  if (error) throw error;
 
-    todosLosProductos = [...todosLosProductos, ...data];
-
-    if (data.length < cantidadPorLote) {
-      seguirBuscando = false;
-    } else {
-      rangoInicio += cantidadPorLote;
-    }
-  }
-
-  return todosLosProductos;
+  // Ahora retornamos un objeto con los productos de esa página y el total global
+  return { productos: data, total: count };
 };
 
-// 2. Función para Subcategorías Específicas - APUNTA A v2 Y BUSCA POR SUBCATEGORÍA
-export const obtenerProductosPorSubcategoria = async (subcategoriaDb) => {
-  let todosLosProductos = [];
-  let rangoInicio = 0;
-  let cantidadPorLote = 1000;
-  let seguirBuscando = true;
+// 2. Función para Subcategorías - PAGINACIÓN DESDE SUPABASE
+export const obtenerProductosPorSubcategoria = async (subcategoriaDb, pagina = 1, limite = 30) => {
+  const from = (pagina - 1) * limite;
+  const to = from + limite - 1;
 
-  while (seguirBuscando) {
-    const { data, error } = await supabase
-       .from('productos_medicos_v2') // ✅ Apunta a la tabla nueva
-       .select('*')
-       .eq('subcategoria', subcategoriaDb) // ✅ Filtra por la subcategoría correcta
-       .range(rangoInicio, rangoInicio + cantidadPorLote - 1);
-       
-    if (error) throw error;
+  const { data, error, count } = await supabase
+     .from('productos_medicos_v2')
+     .select('*', { count: 'exact' })
+     .eq('subcategoria', subcategoriaDb)
+     .range(from, to);
+     
+  if (error) throw error;
 
-    todosLosProductos = [...todosLosProductos, ...data];
-
-    if (data.length < cantidadPorLote) {
-      seguirBuscando = false;
-    } else {
-      rangoInicio += cantidadPorLote;
-    }
-  }
-
-  return todosLosProductos;
+  return { productos: data, total: count };
 };

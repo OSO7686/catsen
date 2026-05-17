@@ -1,109 +1,98 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useSearchParams, Link } from 'react-router-dom';
 import { useCartStore } from '../store/cartStore';
-import { supabase } from '../api/supabase'; 
+import useBusqueda from '/src/hooks/useBusqueda.js';
+
+// COMPONENTES REUTILIZABLES
+import Paginacion from '../components/common/Paginacion';
+import CardProducto from '../components/common/CardProducto';
+import ErrorState from '../components/common/ErrorState';
 
 export default function Busqueda() {
-  const [searchParams] = useSearchParams();
-  const query = searchParams.get('q') || ''; 
   const agregarAlCarrito = useCartStore((state) => state.agregarAlCarrito);
-   
-  const [productosFiltrados, setProductosFiltrados] = useState([]);
-  const [cargando, setCargando] = useState(false); // Inicia en false
+  const [searchParams] = useSearchParams();
+  const queryBusqueda = searchParams.get('q') || '';
+
   const [paginaActual, setPaginaActual] = useState(1);
   const ITEMS_POR_PAGINA = 30;
 
-  // ESTE ES EL ÚNICO LUGAR DONDE HABLAMOS CON SUPABASE
+  const { productos: productosPagina, total: totalProductos, cargando, error, reintentar } = useBusqueda(queryBusqueda, paginaActual);
+
   useEffect(() => {
-    async function realizarBusqueda() {
-      const terminoBusqueda = query.trim().toLowerCase();
+    setPaginaActual(1);
+  }, [queryBusqueda]);
 
-      // Si no hay nada escrito, no buscamos nada
-      if (!terminoBusqueda) {
-        setProductosFiltrados([]);
-        return;
-      }
+  const totalPaginas = useMemo(() => Math.max(1, Math.ceil((totalProductos || 0) / ITEMS_POR_PAGINA)), [totalProductos]);
 
-      setCargando(true);
-
-      try {
-        // Le preguntamos a la nueva tabla unificada
-        const { data, error } = await supabase
-          .from('productos_medicos')
-          .select('*')
-          .or(`nombre.ilike.%${terminoBusqueda}%,mi_sku.ilike.%${terminoBusqueda}%`);
-
-        if (error) throw error;
-        
-        // Guardamos los resultados
-        setProductosFiltrados(data || []);
-      } catch (error) {
-        console.error("Error en la base de datos:", error);
-      }
-
-      setPaginaActual(1);
-      setCargando(false);
+  const cambiarPagina = (nuevaPagina) => {
+    if (nuevaPagina >= 1 && nuevaPagina <= totalPaginas) {
+      setPaginaActual(nuevaPagina);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     }
-
-    realizarBusqueda();
-  }, [query]);
-
-  // Lógica de Paginación
-  const totalProductos = productosFiltrados.length;
-  const totalPaginas = Math.ceil(totalProductos / ITEMS_POR_PAGINA);
-  const productosPagina = productosFiltrados.slice((paginaActual - 1) * ITEMS_POR_PAGINA, paginaActual * ITEMS_POR_PAGINA);
+  };
 
   return (
-    <div className="container mx-auto px-4 py-12 min-h-screen">
-      <div className="mb-10 text-center">
-        <h1 className="text-3xl font-black text-gray-800 uppercase tracking-tighter mb-2">
-          Resultados de Búsqueda
-        </h1>
-        {query && (
-          <p className="text-gray-500">
-            Encontramos <span className="font-bold text-blue-600">{totalProductos}</span> productos para "{query}"
-          </p>
+    <div className="min-h-screen bg-gray-50 py-12">
+      <div className="max-w-7xl mx-auto px-4">
+        
+        {/* Encabezado de Resultados */}
+        <div className="mb-8">
+          <nav className="flex text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-2 gap-2">
+            <Link to="/" className="hover:text-blue-600">Inicio</Link>
+            <span>/</span>
+            <span className="text-blue-900">Búsqueda</span>
+          </nav>
+          <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
+            <h1 className="text-3xl font-black text-gray-900 uppercase tracking-tighter">
+              Resultados para: <span className="text-blue-600">"{queryBusqueda}"</span>
+            </h1>
+            {!cargando && !error && (
+              <p className="text-gray-400 font-bold text-sm bg-white border px-4 py-2 rounded-full h-fit shadow-sm">
+                {totalProductos} Resultados encontrados
+              </p>
+            )}
+          </div>
+        </div>
+
+        {/* Controles de Estado */}
+        {cargando ? (
+          <div className="flex justify-center items-center h-64 bg-white rounded-3xl border border-gray-100 shadow-sm flex-col gap-4">
+            <i className="fas fa-spinner fa-spin text-4xl text-blue-600"></i>
+            <p className="text-xl text-gray-500 font-bold animate-pulse">Buscando en el catálogo...</p>
+          </div>
+        ) : error ? (
+          <ErrorState mensaje={error} reintentar={reintentar} />
+        ) : totalProductos === 0 ? (
+          <div className="bg-white p-16 rounded-3xl border border-gray-100 text-center shadow-sm max-w-3xl mx-auto mt-12">
+            <i className="fas fa-search text-6xl text-gray-200 mb-6 block"></i>
+            <h3 className="text-2xl font-black text-gray-800 mb-2 tracking-tighter">No encontramos lo que buscas</h3>
+            <p className="text-gray-500">Intenta buscar con otras palabras clave, un modelo diferente, o revisa nuestro catálogo general.</p>
+            <Link to="/" className="mt-6 inline-block bg-blue-900 text-white px-8 py-3 rounded-xl font-bold hover:bg-blue-800 transition-colors">
+              Volver al inicio
+            </Link>
+          </div>
+        ) : (
+          <>
+            {/* Grid Reutilizable */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+              {productosPagina.map((producto, index) => (
+                <CardProducto 
+                  key={index} 
+                  producto={producto} 
+                  agregarAlCarrito={agregarAlCarrito} 
+                />
+              ))}
+            </div>
+
+            {/* Paginación Reutilizable */}
+            <Paginacion 
+              paginaActual={paginaActual} 
+              totalPaginas={totalPaginas} 
+              cambiarPagina={cambiarPagina} 
+            />
+          </>
         )}
       </div>
-
-      {cargando ? (
-        <div className="text-center py-20">
-          <p className="text-xl text-gray-500 font-bold animate-pulse">Buscando...</p>
-        </div>
-      ) : totalProductos === 0 && query ? (
-        <div className="text-center py-20">
-          <h2 className="text-2xl font-bold text-gray-800 mb-4">No se encontraron productos</h2>
-        </div>
-      ) : (
-        <>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {productosPagina.map((producto) => (
-              <div key={producto.mi_sku} className="bg-white border rounded-3xl p-5 hover:shadow-xl flex flex-col">
-                <Link to={`/producto/${producto.mi_sku}`}>
-                  <img src={producto.imagen_url} alt={producto.nombre} className="h-48 w-full object-contain mb-4 mix-blend-multiply" />
-                  <h4 className="font-bold text-sm text-gray-800 line-clamp-2 mb-2">{producto.nombre}</h4>
-                  <p className="text-xs text-blue-600 bg-blue-50 w-fit px-2 py-1 rounded font-bold">SKU: {producto.mi_sku}</p>
-                </Link>
-                <div className="mt-auto pt-4 flex justify-between items-center">
-                  <span className="text-xl font-black text-blue-900">{producto.precio}</span>
-                  <button onClick={() => agregarAlCarrito(producto)} className="bg-blue-900 text-white p-3 rounded-xl">
-                    <i className="fas fa-cart-plus"></i>
-                  </button>
-                </div>
-              </div>
-            ))}
-          </div>
-
-          {/* Botones de página sencillos */}
-          {totalPaginas > 1 && (
-            <div className="flex justify-center gap-2 mt-10">
-              <button onClick={() => setPaginaActual(p => Math.max(1, p - 1))} className="px-4 py-2 border rounded">Atrás</button>
-              <span className="px-4 py-2 font-bold">Página {paginaActual} de {totalPaginas}</span>
-              <button onClick={() => setPaginaActual(p => Math.min(totalPaginas, p + 1))} className="px-4 py-2 border rounded">Siguiente</button>
-            </div>
-          )}
-        </>
-      )}
     </div>
   );
 }

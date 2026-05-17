@@ -6,28 +6,37 @@ export const useSubcategoria = (subcategoriaDb) => {
   const [cargando, setCargando] = useState(true);
   const [filtrosSeleccionados, setFiltrosSeleccionados] = useState({});
 
+  // 🚨 NUEVOS ESTADOS PARA MANEJO DE ERRORES
+  const [error, setError] = useState(null);
+  const [intentos, setIntentos] = useState(0);
+
+  const reintentar = () => setIntentos(prev => prev + 1);
+
   // 1. Descargamos el catálogo en bruto
   useEffect(() => {
     async function obtenerDatos() {
       setCargando(true);
+      setError(null); // Limpiamos errores previos
       setFiltrosSeleccionados({});
       try {
-        const data = await obtenerProductosPorSubcategoria(subcategoriaDb);
-        setProductosCrudos(data || []);
-      } catch (error) {
-        console.error("Error cargando productos:", error);
+        const respuesta = await obtenerProductosPorSubcategoria(subcategoriaDb, 1, 2000);
+        setProductosCrudos(respuesta.productos || []);
+      } catch (errorGeneral) {
+        console.error("Error cargando productos:", errorGeneral);
+        // Si la red falla, activamos el mensaje
+        setError("No pudimos conectar con la base de datos. Revisa tu conexión a internet o intenta de nuevo en unos segundos.");
       } finally {
         setCargando(false);
       }
     }
     if (subcategoriaDb) obtenerDatos();
-  }, [subcategoriaDb]);
+    
+    // Agregamos 'intentos' a las dependencias para que el botón de reintentar funcione
+  }, [subcategoriaDb, intentos]);
 
-  // 2. Extracción dinámica: Convertimos el JSON y armamos la lista de filtros
+  // 2. Extracción dinámica (ESTO SE QUEDA EXACTAMENTE IGUAL)
   const filtrosDisponibles = useMemo(() => {
     const opciones = {};
-    
-    // Filtramos ruido: Especificaciones que son útiles pero no sirven como filtros visuales
     const ignorar = [
       "certifications", "warranty", "weight", "category", 
       "latex-free", "sterile", "packaging type", "packaging unit", 
@@ -37,37 +46,24 @@ export const useSubcategoria = (subcategoriaDb) => {
 
     productosCrudos.forEach(prod => {
       let specs = prod.especificaciones;
-      
-      // 🛡️ ESCUDO: Desempaquetamos la señal si Supabase la envía como texto
       if (typeof specs === 'string') {
-        try {
-          specs = JSON.parse(specs);
-        } catch (e) {
-          specs = null; // Si el dato viene corrupto, lo descartamos
-        }
+        try { specs = JSON.parse(specs); } catch (e) { specs = null; }
       }
 
-      // 1. Rescatamos el Conector de Paciente si viene guardado en la columna 'tipo'
       const patientConnector = prod.tipo?.trim();
       if (patientConnector && patientConnector !== "") {
         if (!opciones["Patient Connector"]) opciones["Patient Connector"] = {};
         opciones["Patient Connector"][patientConnector] = (opciones["Patient Connector"][patientConnector] || 0) + 1;
       }
 
-      // 2. Extraemos el resto de variables del objeto JSON ya limpio
       if (specs && typeof specs === 'object') {
         Object.entries(specs).forEach(([clave, valor]) => {
           const claveLimpia = clave.trim();
           const valorLimpio = String(valor).trim();
 
-          // Solo procesamos si no está en la lista negra
           if (claveLimpia && valorLimpio && !ignorar.includes(claveLimpia.toLowerCase())) {
-            
-            // Renombramos "Technology" a "SpO2 Technology" para igualar a la competencia
             let nombreFiltro = claveLimpia;
             if (claveLimpia.toLowerCase() === "technology") nombreFiltro = "SpO2 Technology";
-            
-            // Evitamos duplicar "Patient Connector" si ya lo sacamos de la columna 'tipo'
             if (nombreFiltro === "Patient Connector" && patientConnector === valorLimpio) return;
 
             if (!opciones[nombreFiltro]) opciones[nombreFiltro] = {};
@@ -77,7 +73,6 @@ export const useSubcategoria = (subcategoriaDb) => {
       }
     });
 
-    // Formateamos y ordenamos el bloque alfabéticamente para que se vea estético
     const resultadoFormateado = {};
     for (const key in opciones) {
       if (Object.keys(opciones[key]).length > 0) { 
@@ -89,7 +84,7 @@ export const useSubcategoria = (subcategoriaDb) => {
     return resultadoFormateado;
   }, [productosCrudos]);
 
-  // 3. Controladores de la interfaz (Checkboxes)
+  // 3. Controladores de la interfaz (SE QUEDA IGUAL)
   const manejarFiltro = (categoriaFiltro, valor) => {
     setFiltrosSeleccionados(prev => {
       const seleccionadosActuales = prev[categoriaFiltro] || [];
@@ -109,23 +104,20 @@ export const useSubcategoria = (subcategoriaDb) => {
 
   const limpiarFiltros = () => setFiltrosSeleccionados({});
 
-  // 4. Lógica de Filtrado: Oculta los productos que no coinciden con la selección
+  // 4. Lógica de Filtrado (SE QUEDA IGUAL)
   const productosFiltrados = useMemo(() => {
     if (Object.keys(filtrosSeleccionados).length === 0) return productosCrudos;
 
     return productosCrudos.filter(prod => {
       return Object.entries(filtrosSeleccionados).every(([catFiltro, valoresSeleccionados]) => {
-        
         let specs = prod.especificaciones;
         if (typeof specs === 'string') {
           try { specs = JSON.parse(specs); } catch(e) { specs = null; }
         }
 
         let valorDelProducto = null;
-
         if (specs && typeof specs === 'object') {
           valorDelProducto = specs[catFiltro];
-          
           if (catFiltro === "SpO2 Technology" && !valorDelProducto) {
             valorDelProducto = specs["Technology"];
           }
@@ -136,7 +128,6 @@ export const useSubcategoria = (subcategoriaDb) => {
         }
 
         if (!valorDelProducto) return false;
-
         return valoresSeleccionados.includes(String(valorDelProducto).trim());
       });
     });
@@ -148,6 +139,8 @@ export const useSubcategoria = (subcategoriaDb) => {
     filtrosSeleccionados,
     manejarFiltro,
     limpiarFiltros,
-    cargando
+    cargando,
+    error,         // 👈 Retornamos el error
+    reintentar     // 👈 Retornamos la función
   };
 };

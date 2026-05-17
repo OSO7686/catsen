@@ -1,6 +1,5 @@
 // src/hooks/useProductos.js
 import { useState, useEffect } from 'react';
-import { supabase } from '../SupabaseClient'; // Ajusta la ruta si es necesario
 
 // ✅ CORRECTO: Exportación nombrada
 export const useProductos = (subcategoriaId, filtrosSeleccionados, paginaActual) => {
